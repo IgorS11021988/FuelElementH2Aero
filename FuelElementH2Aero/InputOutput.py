@@ -1,7 +1,7 @@
 import numpy as np
 
 from MathProtEnergyProcSynDatas.TimesMoments import LinearTimesMoments
-from MathProtEnergyProcSynDatas.Indicate import PlotGraphicIndicate, NoIndicate
+from MathProtEnergyProcSynDatas.Indicate import PlotGraphicIndicate, SaveDynamicToFileIndicate
 from MathProtEnergyProcSynDatas.File import DynamicSaveAndPlotGraphics
 
 
@@ -202,7 +202,8 @@ def OutputValues(dyns, fileName,
     # Одиночные графики на полотне
     oneTimeValueGraphics = [{"values": Ukl,  # Величины в моменты времени
                              "graphName": "Напряжение на клеммах",  # Имя полотна
-                             "yAxesName": "Напряжение, В"  # Имя оси ординат
+                             "yAxesName": "Напряжение, В",  # Имя оси ординат
+                             "graphFileBaseName": "AkkVoltage"  # Имя файла графика
                              }]
 
     # Группы графиков на полотне
@@ -211,7 +212,8 @@ def OutputValues(dyns, fileName,
                                                 "Камера отрицательного электрода",
                                                 "Элемент"],  # Список имен величин (в моменты времени)
                             "graphName": "Температуры топливного элемента",  # Имя полотна
-                            "yAxesName": "Температура, град С"  # Имя оси
+                            "yAxesName": "Температура, град С",  # Имя оси
+                            "graphFileBaseName": "AkkVoltage"  # Имя файла графика
                             },
 
                            {"listValues": [Ubinn, Ubinp, Um],  # Список величин в моменты времени
@@ -219,32 +221,36 @@ def OutputValues(dyns, fileName,
                                                 "Положительный двойной слой",
                                                 "Мембрана"],  # Список имен величин (в моменты времени)
                             "graphName": "Напряжения в топливном элементе",  # Имя полотна
-                            "yAxesName": "Напряжение, В"  # Имя оси
+                            "yAxesName": "Напряжение, В",  # Имя оси
+                            "graphFileBaseName": "AkkVoltage"  # Имя файла графика
                             },
 
                            {"listValues": [qH2On, qH2Op],  # Список величин в моменты времени
                             "listValuesNames": ["Отрицательный электрод",
                                                 "Положительный электрод"],  # Список имен величин (в моменты времени)
                             "graphName": "Количество воды в приэлектродных областях",  # Имя полотна
-                            "yAxesName": "Зарядовое число молей воды, Кл"  # Имя оси
+                            "yAxesName": "Зарядовое число молей воды, Кл",  # Имя оси
+                            "graphFileBaseName": "AkkVoltage"  # Имя файла графика
                             },
 
                            {"listValues": [qH2OStn, qH2OStp],  # Список величин в моменты времени
                             "listValuesNames": ["Отрицательный электрод",
                                                 "Положительный электрод"],  # Список имен величин (в моменты времени)
                             "graphName": "Количество воды в электродных камерах",  # Имя полотна
-                            "yAxesName": "Зарядовое число молей воды, Кл"  # Имя оси
+                            "yAxesName": "Зарядовое число молей воды, Кл",  # Имя оси
+                            "graphFileBaseName": "AkkVoltage"  # Имя файла графика
                             },
 
                            {"listValues": [qH2, qO2],  # Список величин в моменты времени
                             "listValuesNames": ["Водород",
                                                 "Кислород"],  # Список имен величин (в моменты времени)
                             "graphName": "Количество газов в электродных камерах",  # Имя полотна
-                            "yAxesName": "Зарядовое число молей газа, Кл"  # Имя оси
+                            "yAxesName": "Зарядовое число молей газа, Кл",  # Имя оси
+                            "graphFileBaseName": "AkkVoltage"  # Имя файла графика
                             }]
 
     # Сохраняем динамику в .csv файл и отображаем графики
-    DynamicSaveAndPlotGraphics(dynamicsHeaders,  # Словарь динамик с заголовками
+    DynamicSaveAndSaveGraphics(dynamicsHeaders,  # Словарь динамик с заголовками
                                fileName,  # Имя файла динамик
 
                                t,  # Моменты времени
@@ -255,7 +261,7 @@ def OutputValues(dyns, fileName,
 
                                sep, dec,   # Разделители (csv и десятичный соответственно)
 
-                               saveDynamicIndicator=NoIndicate,  # Индикатор сохранения динамики
-                               plotGraphicIndicator=PlotGraphicIndicate,  # Индикатор отображения графиков
+                               saveDynamicIndicator=SaveDynamicToFileIndicate,  # Индикатор сохранения динамики
+                               saveGraphicIndicator=PlotGraphicIndicate,  # Индикатор отображения графиков
                                index=index  # Индекс динамики
                                )
