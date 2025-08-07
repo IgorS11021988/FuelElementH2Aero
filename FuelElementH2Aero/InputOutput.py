@@ -203,7 +203,7 @@ def OutputValues(dyns, fileName,
     oneTimeValueGraphics = [{"values": Ukl,  # Величины в моменты времени
                              "graphName": "Напряжение на клеммах",  # Имя полотна
                              "yAxesName": "Напряжение, В",  # Имя оси ординат
-                             "graphFileBaseName": "AkkVoltage"  # Имя файла графика
+                             "graphFileBaseName": "ElVoltage"  # Имя файла графика
                              }]
 
     # Группы графиков на полотне
@@ -213,7 +213,7 @@ def OutputValues(dyns, fileName,
                                                 "Элемент"],  # Список имен величин (в моменты времени)
                             "graphName": "Температуры топливного элемента",  # Имя полотна
                             "yAxesName": "Температура, град С",  # Имя оси
-                            "graphFileBaseName": "AkkVoltage"  # Имя файла графика
+                            "graphFileBaseName": "ElTemperatures"  # Имя файла графика
                             },
 
                            {"listValues": [Ubinn, Ubinp, Um],  # Список величин в моменты времени
@@ -222,7 +222,7 @@ def OutputValues(dyns, fileName,
                                                 "Мембрана"],  # Список имен величин (в моменты времени)
                             "graphName": "Напряжения в топливном элементе",  # Имя полотна
                             "yAxesName": "Напряжение, В",  # Имя оси
-                            "graphFileBaseName": "AkkVoltage"  # Имя файла графика
+                            "graphFileBaseName": "InElVoltages"  # Имя файла графика
                             },
 
                            {"listValues": [qH2On, qH2Op],  # Список величин в моменты времени
@@ -230,7 +230,7 @@ def OutputValues(dyns, fileName,
                                                 "Положительный электрод"],  # Список имен величин (в моменты времени)
                             "graphName": "Количество воды в приэлектродных областях",  # Имя полотна
                             "yAxesName": "Зарядовое число молей воды, Кл",  # Имя оси
-                            "graphFileBaseName": "AkkVoltage"  # Имя файла графика
+                            "graphFileBaseName": "InElWaterMoles"  # Имя файла графика
                             },
 
                            {"listValues": [qH2OStn, qH2OStp],  # Список величин в моменты времени
@@ -238,7 +238,7 @@ def OutputValues(dyns, fileName,
                                                 "Положительный электрод"],  # Список имен величин (в моменты времени)
                             "graphName": "Количество воды в электродных камерах",  # Имя полотна
                             "yAxesName": "Зарядовое число молей воды, Кл",  # Имя оси
-                            "graphFileBaseName": "AkkVoltage"  # Имя файла графика
+                            "graphFileBaseName": "CamElWaterMoles"  # Имя файла графика
                             },
 
                            {"listValues": [qH2, qO2],  # Список величин в моменты времени
@@ -246,7 +246,7 @@ def OutputValues(dyns, fileName,
                                                 "Кислород"],  # Список имен величин (в моменты времени)
                             "graphName": "Количество газов в электродных камерах",  # Имя полотна
                             "yAxesName": "Зарядовое число молей газа, Кл",  # Имя оси
-                            "graphFileBaseName": "AkkVoltage"  # Имя файла графика
+                            "graphFileBaseName": "ElGases"  # Имя файла графика
                             }]
 
     # Сохраняем динамику в .csv файл и отображаем графики
