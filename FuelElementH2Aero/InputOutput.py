@@ -2,7 +2,7 @@ import numpy as np
 
 from MathProtEnergyProcSynDatas.TimesMoments import LinearTimesMoments
 from MathProtEnergyProcSynDatas.Indicate import PlotGraphicIndicate, SaveDynamicToFileIndicate
-from MathProtEnergyProcSynDatas.File import DynamicSaveAndPlotGraphics
+from MathProtEnergyProcSynDatas.File import DynamicSaveAndSaveGraphics
 
 
 # Функция расчета динамики
