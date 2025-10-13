@@ -4,6 +4,26 @@ from MathProtEnergyProcSynDatas.TimesMoments import LinearTimesMoments
 from MathProtEnergyProcSynDatas.Indicate import PlotGraphicIndicate, SaveDynamicToFileIndicate
 from MathProtEnergyProcSynDatas.File import DynamicSaveAndSaveGraphics
 
+from MathProtEnergyProc.CorrectionModel import ReluFilter
+
+
+# Корректировка перекрестных коэффициентов
+def crCfCorr(Pars,  # Параметры
+
+             crCfName  # Имя перекрестного коэффициента
+             ):
+    # Получаем индексы перекрестных коэффициентов, больших 1
+    gtParsBInd = (Pars[crCfName] > 1)
+
+    # Корректируем перекрестные коэффициенты, большие 1
+    Pars.loc[gtParsBInd, crCfName] = 1
+
+    # Получаем индексы перекрестных коэффициентов, меньших -1
+    ltParsBInd = (Pars[crCfName] < -1)
+
+    # Корректируем перекрестные коэффициенты, меньшие -1
+    Pars.loc[ltParsBInd, crCfName] = -1
+
 
 # Функция расчета динамики
 def InputArrayCreate(Pars,  # Параметры
@@ -15,6 +35,27 @@ def InputArrayCreate(Pars,  # Параметры
     Pars[["TFEl0", "TElp0", "TEln0"]] += Pars[["Tokr"]].to_numpy()  # Корректируем начальные температуры, заданные относительно температуры окружающей среды
     Pars["qbinp0"] *= (Pars["muO2s"] / 4 - Pars["muH2Os"] / 2 + Pars["Econ"]) * Pars["Cbin0p"]  # Заряд на положительном двойном слое, Кл
     Pars["qbinn0"] *= (Pars["muH2s"] / 2 - Pars["Econ"]) * Pars["Cbin0n"]  # Заряд на отрицательном двойном слое, Кл
+
+    # Корректируем главные кинетические коэффициенты
+    mainKinCf = ["kEvH2Osp",
+                 "kEvH2Osn",
+                 "dKElTEvp0",
+                 "dKElTEvn0",
+                 "Rm0",
+                 "kDiffH2O0",
+                 "dKDiffH2O0",
+                 "Rbin0p",
+                 "Rbin0n",
+                 "dKElTQp0",
+                 "dKElTQn0"]
+    Pars[mainKinCf] = ReluFilter(Pars[mainKinCf])
+
+    # Корректируем перекрестные коэффициенты
+    crCfCorr(Pars, "crQKElp")
+    crCfCorr(Pars, "crQKEln")
+    crCfCorr(Pars, "crRmDiffH2O")
+    crCfCorr(Pars, "crEvH20KElp")
+    crCfCorr(Pars, "crEvH20KEln")
 
     # Переводим температуру в кельвины
     Pars[["TFEl0", "TElp0", "TEln0", "Tokr", "THMus", "bRTp", "bRTm", "bRTn", "bTKEvH2Osp", "bTKEvH2Osn"]] += 273.15

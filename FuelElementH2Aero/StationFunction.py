@@ -88,6 +88,9 @@ def StateFunction(stateCoordinates,
      bRTp,  # Граничная температура по сопротивлению положительного электрода
      bRTm,  # Граничная температура по сопротивлению мембраны
      bRTn,  # Граничная температура по сопротивлению отрицательного электрода
+     cRTp,  # Температурный коэффициент по сопротивлению положительного электрода
+     cRTm,  # Температурный коэффициент по сопротивлению мембраны
+     cRTn,  # Температурный коэффициент по сопротивлению отрицательного электрода
      alphaCQp,  # Зарядовый коэффициент емкости положительного электрода
      alphaCQn,  # Зарядовый коэффициент емкости отрицательного электрода
      kDiffH2O0,  # Характерный коэффициент диффузии воды в водородно-воздушным топливном элементе
@@ -98,6 +101,8 @@ def StateFunction(stateCoordinates,
      alphaKTEvH2Osn,  # Температурный показатель коэффициента испарения воды в камеру отрицательного электрода
      bTKEvH2Osp,  # Температурная граница коэффициента испарения воды в камеру положительного электрода
      bTKEvH2Osn,  # Температурная граница коэффициента испарения воды в камеру отрицательного электрода
+     cTKEvH2Osp,  # Температурный коэффициент испарения воды в камеру положительного электрода
+     cTKEvH2Osn,  # Температурный коэффициент испарения воды в камеру отрицательного электрода
      evExtH2Osp,  # Поток водяного пара в камеру положительного электрода
      evExtH2Osn,  # Поток водяного пара в камеру отрицательного электрода
      evExtO2s,  # Поток кислорода в камеру положительного электрода
@@ -162,15 +167,15 @@ def StateFunction(stateCoordinates,
     balanceMatrix = np.array([])
 
     # Определяем отток воды
-    evExtH2Op = -evExtH2Osp * (nuH2OStp / nuH2OStsp - 1)
-    evExtH2On = -evExtH2Osn * (nuH2OStn / nuH2OStsn - 1)
+    evExtH2Op = evExtH2Osp * (nuH2OStp / nuH2OStsp - 1)
+    evExtH2On = evExtH2Osn * (nuH2OStn / nuH2OStsn - 1)
 
     # Определяем приток кислорода и водорода
     evExtO2 = -evExtO2s * (nuO2 / nuO2s - 1)
     evExtH2 = -evExtH2s * (nuH2 / nuH2s - 1)
 
     # Внешние потоки зарядов
-    stateCoordinatesStreams = np.array([-I, -I, -I, evExtH2Op, evExtH2On, evExtO2, evExtH2], dtype=np.double)
+    stateCoordinatesStreams = np.array([-I, -I, -I, -evExtH2Op, -evExtH2On, evExtO2, evExtH2], dtype=np.double)
 
     # Выделившаяся джоулева теплота в клеммах
     QKl = Rkl * np.power(I, 2)
@@ -236,14 +241,14 @@ def StateFunction(stateCoordinates,
     (Rbinp, Rbinn,
      dKElTQp, dKElTQn,
      crKElTQp, crKElTQn) = funRbin(TFEl, dissUbinp, dissUbinn, alphaRIp, alphaRIn,
-                                   alphaRTp, alphaRTn, bRTp, bRTn, Rbin0p, Rbin0n,
-                                   dKElTQp0, dKElTQn0, crQKElp, crQKEln, betaRI2p,
-                                   betaRI2n, betaRI3p, betaRI3n, betaRT2p, betaRT2n,
-                                   betaRT3p, betaRT3n)
+                                   alphaRTp, alphaRTn, bRTp, bRTn, cRTp, cRTn,
+                                   Rbin0p, Rbin0n, dKElTQp0, dKElTQn0, crQKElp,
+                                   crQKEln, betaRI2p, betaRI2n, betaRI3p, betaRI3n,
+                                   betaRT2p, betaRT2n, betaRT3p, betaRT3n)
 
     # Определяем сопротивления мембраны (вместе с диффузией воды)
     (Rm, kDiffH2O, crKDiffH2O) = funRm(TFEl, nuH2Op, nuH2On, nuH2Osm, alphaRTm, bRTm,
-                                       Rm0, kDiffH2O0, dKDiffH2O0, crRmDiffH2O,
+                                       cRTm, Rm0, kDiffH2O0, dKDiffH2O0, crRmDiffH2O,
                                        betaRT2m, betaRT3m, betaKRmH2O2, betaKRmH2O3)
 
     # Определяем коэфициенты испарения воды (вместе с теплообменом с камерами электродов)
@@ -253,10 +258,10 @@ def StateFunction(stateCoordinates,
                                       nuH2OStn, nuH2OsEvp, nuH2OsEvn, kEvH2Osp,
                                       kEvH2Osn, dKElTEvp0, dKElTEvn0, crEvH20KElp,
                                       crEvH20KEln, alphaKTEvH2Osp, alphaKTEvH2Osn,
-                                      bTKEvH2Osp, bTKEvH2Osn, betaKTEvH2Op2,
-                                      betaKTEvH2On2, betaKNuEvH2Op2, betaKNuEvH2On2,
-                                      betaKTEvH2Op3, betaKTEvH2On3, betaKNuEvH2Op3,
-                                      betaKNuEvH2On3)
+                                      bTKEvH2Osp, bTKEvH2Osn, cTKEvH2Osp, cTKEvH2Osn,
+                                      betaKTEvH2Op2, betaKTEvH2On2, betaKNuEvH2Op2,
+                                      betaKNuEvH2On2, betaKTEvH2Op3, betaKTEvH2On3,
+                                      betaKNuEvH2Op3, betaKNuEvH2On3)
 
     # Главный блок кинетической матрицы по процессам
     kineticMatrixPCPC = np.array([1 / Rbinp, 1 / Rm, 1 / Rbinn,
