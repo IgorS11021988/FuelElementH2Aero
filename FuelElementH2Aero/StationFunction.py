@@ -269,8 +269,8 @@ def StateFunction(stateCoordinates,
                                   crKDiffH2O, crKDiffH2O], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
 
     # Перекрестные блоки кинетической матрицы по процессам
-    kineticMatrixPCHeat = np.array([crKElTEvp, crKElTEvn, crKElTQp, crKElTQn], dtype=np.double) * Tokr / 4.642
-    kineticMatrixHeatPC = np.array([crKElTEvp, crKElTEvn, crKElTQp, crKElTQn], dtype=np.double) * Tokr / 4.642
+    kineticMatrixPCHeat = np.array([crKElTEvp, crKElTEvn, crKElTQp, crKElTQn], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
+    kineticMatrixHeatPC = np.array([crKElTEvp, crKElTEvn, crKElTQp, crKElTQn], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
 
     # Главный блок кинетической матрицы по теплообмену
     KFEl = ReluFilter(KFEl)
