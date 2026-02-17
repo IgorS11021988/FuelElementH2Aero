@@ -208,7 +208,7 @@ def IndepStateFunction(stateCoordinates,
                                       cElH2OStn, cElH2n, CElsp)  # Определяем химические потенциалы кислорода и воды в камере отрицательного электрода
 
     # Определяем сопротивления двойных слоев (вместе с теплообменом с камерами электродов)
-    (rbinp, rbinn) = funRbin(TFEl, dissUbinp, dissUbinn, alphaRIp,
+    (sbinp, sbinn) = funRbin(TFEl, dissUbinp, dissUbinn, alphaRIp,
                              alphaRIn, alphaRTp, alphaRTn, bRTp,
                              bRTn, cRTp, cRTn, betaRI2p, betaRI2n,
                              betaRI3p, betaRI3n, betaRT2p, betaRT2n,
@@ -225,7 +225,7 @@ def IndepStateFunction(stateCoordinates,
                               betaKNuEvH2Op3, betaKNuEvH2On3)
 
     # Определяем сопротивления мембраны (вместе с диффузией воды)
-    rm = funRm(TFEl, nuH2Op, nuH2On, nuH2Osm,
+    sm = funRm(TFEl, nuH2Op, nuH2On, nuH2Osm,
                alphaRTm, bRTm, cRTm, betaRT2m,
                betaRT3m, betaKRmH2O2, betaKRmH2O3)
 
@@ -238,9 +238,9 @@ def IndepStateFunction(stateCoordinates,
                                            dtype=np.double)) * np.array([1, 1, crEvH20KElp],
                                                                         dtype=np.double)).reshape(-1, 1)
     kNoInvMatrixElp = np.array([KElTop * Tokr / TOkrs + \
-                                dKElTQp0 * (Tokr / TOkrs - np.power(crQKElp, 2)) / rbinp + \
+                                dKElTQp0 * (Tokr / TOkrs - np.power(crQKElp, 2)) * sbinp + \
                                 dKElTEvp0 * (Tokr / TOkrs - np.power(crEvH20KElp, 2)) * kbinp,
-                                1 / rbinp, kbinp], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
+                                sbinp, kbinp], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
 
     # Определяем обратимые и необратимые составляющие кинетической матрицы отрицательной камеры
     kInvMatrixElnEchCr = (np.sqrt(np.array([1 / Rbin0n, 0, dKElTQn0],
@@ -250,17 +250,17 @@ def IndepStateFunction(stateCoordinates,
                                            dtype=np.double)) * np.array([1, 1, crEvH20KEln],
                                                                         dtype=np.double)).reshape(-1, 1)
     kNoInvMatrixEln = np.array([KElTon * Tokr / TOkrs + \
-                                dKElTQn0 * (Tokr / TOkrs - np.power(crQKEln, 2)) / rbinn + \
+                                dKElTQn0 * (Tokr / TOkrs - np.power(crQKEln, 2)) * sbinn + \
                                 dKElTEvn0 * (Tokr / TOkrs - np.power(crEvH20KEln, 2)) * kbinn,
-                                1 / rbinn, kbinn], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
+                                sbinn, kbinn], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
 
     # Определяем обратимые и необратимые составляющие кинетической матрицы мембраны
     kInvMatrixElmDiffs = np.array([0, 1], dtype=np.double).reshape(-1, 1)
     kInvMatrixElmCr = (np.sqrt(np.array([1 / Rm0, dKDiffH2O0],
                                         dtype=np.double)) * np.array([1, crRmDiffH2O],
                                                                      dtype=np.double)).reshape(-1, 1)
-    kNoInvMatrixElm = np.array([kDiffH2O0 + dKDiffH2O0 * (1 - np.power(crRmDiffH2O, 2)) / rm,
-                                1 / rm], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
+    kNoInvMatrixElm = np.array([kDiffH2O0 + dKDiffH2O0 * (1 - np.power(crRmDiffH2O, 2)) * sm,
+                                sm], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
 
     # Определяем необратимые составляющие динамической матрицы по теплообмену с окружающей средой
     kQOkr = np.array([KFEl, KElp, KEln], dtype=np.double) * np.power(Tokr, 2) / (4.642 * TOkrs * NonEqSystemQBase.GetTbase())

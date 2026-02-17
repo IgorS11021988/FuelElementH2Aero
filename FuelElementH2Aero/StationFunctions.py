@@ -1,5 +1,7 @@
 import numpy as np
 
+from MathProtEnergyProc.CorrectionModel import ReluFilter
+
 
 # Вспомогательные функции
 def funRI(alphaRI, dissU):  # Мультипликативная корректировка по току через двойной слой
@@ -12,7 +14,7 @@ def funRI(alphaRI, dissU):  # Мультипликативная коррект�
 
 
 def funRT(alphaRT, bRT, cRT, TFEl):  # Мультипликативная корректировка по температуре
-    return cRT * np.exp(-alphaRT * (TFEl - bRT)) + 1
+    return 1 + cRT * np.exp(-alphaRT * (TFEl - bRT))
 
 
 def funCQbin(qbin, alphaCQ):  # Емкость двойного слоя в зависимости от заряда
@@ -145,7 +147,7 @@ def funNuEvH2O(nuH2O, nuH2OSt, nuH2OsEv):
 
 
 def funKTEvH2O(TFEl, TEl, alphaKTEvH2Os, bTKEvH2Os, cTKEvH2Os):
-    return 1 + cTKEvH2Os * np.exp(alphaKTEvH2Os * ((TEl + TFEl) / 2 - bTKEvH2Os))
+    return cTKEvH2Os * np.exp(alphaKTEvH2Os * ((TEl + TFEl) / 2 - bTKEvH2Os))
 
 
 # Функции для свойств веществ и процессов
@@ -155,34 +157,34 @@ def funRbin(TFEl, dissUbinp, dissUbinn, alphaRIp,
             betaRI3p, betaRI3n, betaRT2p, betaRT2n,
             betaRT3p, betaRT3n):  # Функция сопротивления двойных слоев
     # Определяем корректировку сопротивления двойных слоев через токи двойных слоев
-    rIbinp = funRI(alphaRIp, dissUbinp)  # Положительный двойной слой
-    rIbinn = funRI(alphaRIn, dissUbinn)  # Отрицательный двойной слой
+    sIbinp = 1 / funRI(alphaRIp, dissUbinp)  # Положительный двойной слой
+    sIbinn = 1 / funRI(alphaRIn, dissUbinn)  # Отрицательный двойной слой
 
     # Добавляем довесочные члены к корректировкам сопротивления двойных слоев через токи двойных слоев
-    rIbinp += betaRI2p * np.power(rIbinp, 2) + betaRI3p * np.power(rIbinp, 3)
-    rIbinn += betaRI2n * np.power(rIbinn, 2) + betaRI3n * np.power(rIbinn, 3)
+    sIbinp += betaRI2p * np.power(1 - sIbinp, 2) + betaRI3p * np.power(1 - sIbinp, 3)
+    sIbinn += betaRI2n * np.power(1 - sIbinn, 2) + betaRI3n * np.power(1 - sIbinn, 3)
 
     # Определяем корректировку сопротивления двойных слоев через температуру
-    rTbinp = funRT(alphaRTp, bRTp, cRTp, TFEl)
-    rTbinn = funRT(alphaRTn, bRTn, cRTn, TFEl)
+    sTbinp = 1 / funRT(alphaRTp, bRTp, cRTp, TFEl)
+    sTbinn = 1 / funRT(alphaRTn, bRTn, cRTn, TFEl)
 
     # Добавляем довесочные члены к корректировкам сопротивления двойных слоев через температуру
-    rTbinp += betaRT2p * np.power(rTbinp, 2) + betaRT3p * np.power(rTbinp, 3)
-    rTbinn += betaRT2n * np.power(rTbinn, 2) + betaRT3n * np.power(rTbinn, 3)
+    sTbinp += betaRT2p * np.power(1 - sTbinp, 2) + betaRT3p * np.power(1 - sTbinp, 3)
+    sTbinn += betaRT2n * np.power(1 - sTbinn, 2) + betaRT3n * np.power(1 - sTbinn, 3)
 
     # Выводим результат
-    return (rIbinp * rTbinp,
-            rIbinn * rTbinn)
+    return (sIbinp * sTbinp,
+            sIbinn * sTbinn)
 
 
 def funRm(TFEl, nuH2Op, nuH2On, nuH2Osm,
           alphaRTm, bRTm, cRTm, betaRT2m,
           betaRT3m, betaKRmH2O2, betaKRmH2O3):  # Функция сопротивления мембраны
     # Определяем температурный коэффициент сопротивления мембраны
-    rm = funRT(-alphaRTm, bRTm, cRTm, TFEl)
+    sm = 1 / funRT(-alphaRTm, bRTm, cRTm, TFEl)
 
     # Добавляем довесочные члены к температурному коэффициенту сопротивления мембраны
-    rm += betaRT2m * np.power(rm, 2) + betaRT3m * np.power(rm, 3)
+    sm += betaRT2m * np.power(1 - sm, 2) + betaRT3m * np.power(1 - sm, 3)
 
     # Определяем увлажняющий коэффициент сопротивления мембраны
     krmH2O = funKrmH2O(nuH2Op, nuH2On, nuH2Osm)
@@ -190,8 +192,8 @@ def funRm(TFEl, nuH2Op, nuH2On, nuH2Osm,
     # Добавляем довесочные члены к увлажняющему коэффициенту сопротивления мембраны
     krmH2O += betaKRmH2O2 * np.power(krmH2O, 2) + betaKRmH2O3 * np.power(krmH2O, 3)
 
-    # Выводим результат
-    return rm * (1 + krmH2O)
+    # Выводим резуль(тат
+    return sm / (1 + ReluFilter(krmH2O))
 
 
 def funCbin(qbinp, qbinn, alphaCQp, alphaCQn, Cbin0p, Cbin0n,
@@ -223,16 +225,16 @@ def funEvH2O(TFEl, TElp, TEln, nuH2Op, nuH2On, nuH2OStp,
     kTEvH2On = funKTEvH2O(TFEl, TEln, alphaKTEvH2Osn, bTKEvH2Osn, cTKEvH2Osn)
 
     # Добавляем довески к корректировочному коэффициенту по температуре
-    kTEvH2Op += betaKTEvH2Op2 * np.power(kTEvH2Op, 2) + betaKTEvH2Op3 * np.power(kTEvH2Op, 3)
-    kTEvH2On += betaKTEvH2On2 * np.power(kTEvH2On, 2) + betaKTEvH2On3 * np.power(kTEvH2On, 3)
+    kTEvH2Op += betaKTEvH2Op2 * np.power(kTEvH2Op, 2) + betaKTEvH2Op3 * np.power(kTEvH2Op, 3) + 1
+    kTEvH2On += betaKTEvH2On2 * np.power(kTEvH2On, 2) + betaKTEvH2On3 * np.power(kTEvH2On, 3) + 1
 
     # Корректировочные коэффициенты по числу молей воды
     kNuEvH2Op = funNuEvH2O(nuH2Op, nuH2OStp, nuH2OsEvp)
     kNuEvH2On = funNuEvH2O(nuH2On, nuH2OStn, nuH2OsEvn)
 
     # Добавляем довески к корректировочному коэффициенту по числу молей воды
-    kNuEvH2Op += betaKNuEvH2Op2 * np.power(kNuEvH2Op, 2) + betaKNuEvH2Op3 * np.power(kNuEvH2Op, 3)
-    kNuEvH2On += betaKNuEvH2On2 * np.power(kNuEvH2On, 2) + betaKNuEvH2On3 * np.power(kNuEvH2On, 3)
+    kNuEvH2Op += betaKNuEvH2Op2 * np.power(kNuEvH2Op - 1, 2) + betaKNuEvH2Op3 * np.power(kNuEvH2Op - 1, 3)
+    kNuEvH2On += betaKNuEvH2On2 * np.power(kNuEvH2On - 1, 2) + betaKNuEvH2On3 * np.power(kNuEvH2On - 1, 3)
 
     # Итоговый корректирующий коэффициент
     kbinp = kTEvH2Op * kNuEvH2Op
