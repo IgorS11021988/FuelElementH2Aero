@@ -1,15 +1,13 @@
 import numpy as np
 
-from .StationFunctions import funHMuH2O, funHMuCam, funCbin, funRbin, funRm, funEvH2O
+from .StationFunctions import funJHSzTEl, funJHSzTCam, funCbin, funRbin, funRm, funEvH2O
 from MathProtEnergyProc import NonEqSystemQBase
-
-from MathProtEnergyProc.CorrectionModel import ReluFilter
 
 
 # Функция состояния для литий-ионного аккумулятора
-def StateFunction(stateCoordinates,
-                  reducedTemp,
-                  systemParameters):
+def IndepStateFunction(stateCoordinates,
+                       reducedTemp,
+                       systemParameters):
     # получаем электрические заряды
     [qbinp,  # Электрический заряд положительного двойного слоя
      qm,  # Электрический заряд мембраны
@@ -117,6 +115,7 @@ def StateFunction(stateCoordinates,
      crEvH20KEln,  # Коэффициент перекрестности испарения воды и теплообмена с камерой отрицательного электродаэлектрода
      crQKElp,  # Коэффициент перекрестности электродной реакции и теплообмена с камерой положительного электрода
      crQKEln,  # Коэффициент перекрестности электродной реакции и теплообмена с камерой отрицательного электрода
+     TOkrs,  # Постоянная температура окружающей среды
 
      # Получаем довесочные коэффициенты
      betaRI2p,
@@ -163,9 +162,6 @@ def StateFunction(stateCoordinates,
      Rkl  # Сопротивление клемм
      ] = systemParameters
 
-    # Матрица баланса
-    balanceMatrix = np.array([])
-
     # Определяем отток воды
     evExtH2Op = evExtH2Osp * (nuH2OStp / nuH2OStsp - 1)
     evExtH2On = evExtH2Osn * (nuH2OStn / nuH2OStsn - 1)
@@ -174,137 +170,119 @@ def StateFunction(stateCoordinates,
     evExtO2 = -evExtO2s * (nuO2 / nuO2s - 1)
     evExtH2 = -evExtH2s * (nuH2 / nuH2s - 1)
 
-    # Внешние потоки зарядов
-    stateCoordinatesStreams = np.array([-I, -I, -I, -evExtH2Op, -evExtH2On, evExtO2, evExtH2], dtype=np.double)
-
     # Выделившаяся джоулева теплота в клеммах
     QKl = Rkl * np.power(I, 2)
-
-    # Внешние потоки теплоты
-    heatEnergyPowersStreams = np.array([QKl, qExtp, qExtn], dtype=np.double)
-
-    # Выводим температуры
-    energyPowerTemperatures = np.array([TFEl, TElp, TEln, Tokr], dtype=np.double)
-
-    # Определяем химический потенциал воды в приэлектродных областях мембраны
-    (muH2Op, hH2Op) = funHMuH2O(nuH2Op, TFEl,
-                                nuH2Os, THMus,
-                                muH2Os, dmuH2Os,
-                                hH2Os, dhH2Os,
-                                betaMuH2O2, betaMuH2O3,
-                                betaHH2O2, betaHH2O3,
-                                cFElH2O)  # Положительный электрод
-    (muH2On, hH2On) = funHMuH2O(nuH2On, TFEl,
-                                nuH2Os, THMus,
-                                muH2Os, dmuH2Os,
-                                hH2Os, dhH2Os,
-                                betaMuH2O2, betaMuH2O3,
-                                betaHH2O2, betaHH2O3,
-                                cFElH2O)  # Отрицательный электрод
-
-    # Определяем химические потенциалы кислорода, водорода и воды в камерах электродов при стандартной температуре
-    (muH2OStp, muO2, hH2OStp, hO2) = funHMuCam(nuH2OStp, nuO2, TElp,
-                                               nuH2OStsp, nuO2s, THMus,
-                                               muH2OStsp, dmuH2OStsp, muO2s, dmuO2s,
-                                               hH2OStsp, dhH2OStsp, hO2s, dhO2s,
-                                               betaMuH2OStp, betaMuH2OStO2p, betaMuO2p,
-                                               betaHH2OStp, betaHH2OStO2p, betaHO2p,
-                                               cElH2OStp, cElO2p)  # Определяем химические потенциалы кислорода и воды в камере положительного электрода
-    (muH2OStn, muH2, hH2OStn, hH2) = funHMuCam(nuH2OStn, nuH2, TEln,
-                                               nuH2OStsn, nuH2s, THMus,
-                                               muH2OStsn, dmuH2OStsn, muH2s, dmuH2s,
-                                               hH2OStsn, dhH2OStsn, hH2s, dhH2s,
-                                               betaMuH2OStn, betaMuH2OStH2n, betaMuH2n,
-                                               betaHH2OStn, betaHH2OStH2n, betaHH2n,
-                                               cElH2OStn, cElH2n)  # Определяем химические потенциалы кислорода и воды в камере отрицательного электрода
 
     # Определяем емкости двойных слоев
     (Cbinp, Cbinn) = funCbin(qbinp, qbinn, alphaCQp, alphaCQn, Cbin0p, Cbin0n,
                              betaCQ2p, betaCQ2n, betaCQ3p, betaCQ3n)
 
-    # Определяем напряжения на двойных слоях
-    dissUbinp =  Econ - qbinp / Cbinp  # Положительный двойной слой
-    dissUbinn = -Econ - qbinn / Cbinn  # Отрицательный двойной слой
+    # Определяем химический потенциал воды в приэлектродных областях мембраны
+    (JSzEl, HSzTEl,
+     JSTEl, HSTTEl,
+     dissUbinp, dissUbinn) = funJHSzTEl(qbinp, qm, qbinn,
+                                        nuH2Op, nuH2On, TFEl,
+                                        Cbinp, Cm, Cbinn, Econ,
+                                        nuH2Os, THMus, muH2Os,
+                                        dmuH2Os, hH2Os, dhH2Os,
+                                        betaMuH2O2, betaMuH2O3,
+                                        betaHH2O2, betaHH2O3,
+                                        cFElH2O, CFEls)
 
-    # Потенциалы взаимодействия энергетических степеней свободы
-    potentialInter = np.array([dissUbinp, -qm / Cm, dissUbinn,
-                               -muH2Op, -muH2On, -muH2OStp, -muH2OStn,
-                               -muO2, -muH2], dtype=np.double)
-
-    # Потенциалы взаимодействия между энергетическими степенями свободы
-    potentialInterBet = np.array([])
-
-    # Доли распределения некомпенсированной теплоты
-    beta = np.array([])
+    # Определяем химические потенциалы кислорода, водорода и воды в камерах электродов при стандартной температуре
+    (JSzCamp, HSzTCamp,
+     JSTCamp, HSTTCamp) = funJHSzTCam(nuH2OStp, nuO2, TElp,
+                                      nuH2OStsp, nuO2s, THMus,
+                                      muH2OStsp, dmuH2OStsp, muO2s, dmuO2s,
+                                      hH2OStsp, dhH2OStsp, hO2s, dhO2s,
+                                      betaMuH2OStp, betaMuH2OStO2p, betaMuO2p,
+                                      betaHH2OStp, betaHH2OStO2p, betaHO2p,
+                                      cElH2OStp, cElO2p, CElsp)  # Определяем химические потенциалы кислорода и воды в камере положительного электрода
+    (JSzCamn, HSzTCamn,
+     JSTCamn, HSTTCamn) = funJHSzTCam(nuH2OStn, nuH2, TEln,
+                                      nuH2OStsn, nuH2s, THMus,
+                                      muH2OStsn, dmuH2OStsn, muH2s, dmuH2s,
+                                      hH2OStsn, dhH2OStsn, hH2s, dhH2s,
+                                      betaMuH2OStn, betaMuH2OStH2n, betaMuH2n,
+                                      betaHH2OStn, betaHH2OStH2n, betaHH2n,
+                                      cElH2OStn, cElH2n, CElsp)  # Определяем химические потенциалы кислорода и воды в камере отрицательного электрода
 
     # Определяем сопротивления двойных слоев (вместе с теплообменом с камерами электродов)
-    (Rbinp, Rbinn,
-     dKElTQp, dKElTQn,
-     crKElTQp, crKElTQn) = funRbin(TFEl, dissUbinp, dissUbinn, alphaRIp, alphaRIn,
-                                   alphaRTp, alphaRTn, bRTp, bRTn, cRTp, cRTn,
-                                   Rbin0p, Rbin0n, dKElTQp0, dKElTQn0, crQKElp,
-                                   crQKEln, betaRI2p, betaRI2n, betaRI3p, betaRI3n,
-                                   betaRT2p, betaRT2n, betaRT3p, betaRT3n)
-
-    # Определяем сопротивления мембраны (вместе с диффузией воды)
-    (Rm, kDiffH2O, crKDiffH2O) = funRm(TFEl, nuH2Op, nuH2On, nuH2Osm, alphaRTm, bRTm,
-                                       cRTm, Rm0, kDiffH2O0, dKDiffH2O0, crRmDiffH2O,
-                                       betaRT2m, betaRT3m, betaKRmH2O2, betaKRmH2O3)
+    (rbinp, rbinn) = funRbin(TFEl, dissUbinp, dissUbinn, alphaRIp,
+                             alphaRIn, alphaRTp, alphaRTn, bRTp,
+                             bRTn, cRTp, cRTn, betaRI2p, betaRI2n,
+                             betaRI3p, betaRI3n, betaRT2p, betaRT2n,
+                             betaRT3p, betaRT3n)
 
     # Определяем коэфициенты испарения воды (вместе с теплообменом с камерами электродов)
-    (kEvH2Op, kEvH2On,
-     dKElTEvp, dKElTEvn,
-     crKElTEvp, crKElTEvn) = funEvH2O(TFEl, TElp, TEln, nuH2Op, nuH2On, nuH2OStp,
-                                      nuH2OStn, nuH2OsEvp, nuH2OsEvn, kEvH2Osp,
-                                      kEvH2Osn, dKElTEvp0, dKElTEvn0, crEvH20KElp,
-                                      crEvH20KEln, alphaKTEvH2Osp, alphaKTEvH2Osn,
-                                      bTKEvH2Osp, bTKEvH2Osn, cTKEvH2Osp, cTKEvH2Osn,
-                                      betaKTEvH2Op2, betaKTEvH2On2, betaKNuEvH2Op2,
-                                      betaKNuEvH2On2, betaKTEvH2Op3, betaKTEvH2On3,
-                                      betaKNuEvH2Op3, betaKNuEvH2On3)
+    (kbinp, kbinn) = funEvH2O(TFEl, TElp, TEln, nuH2Op, nuH2On, nuH2OStp,
+                              nuH2OStn, nuH2OsEvp, nuH2OsEvn, kEvH2Osp,
+                              kEvH2Osn, dKElTEvp0, dKElTEvn0, crEvH20KElp,
+                              crEvH20KEln, alphaKTEvH2Osp, alphaKTEvH2Osn,
+                              bTKEvH2Osp, bTKEvH2Osn, cTKEvH2Osp, cTKEvH2Osn, 
+                              betaKTEvH2Op2, betaKTEvH2On2, betaKNuEvH2Op2,
+                              betaKNuEvH2On2, betaKTEvH2Op3, betaKTEvH2On3,
+                              betaKNuEvH2Op3, betaKNuEvH2On3)
 
-    # Главный блок кинетической матрицы по процессам
-    kineticMatrixPCPC = np.array([1 / Rbinp, 1 / Rm, 1 / Rbinn,
-                                  kDiffH2O, kEvH2Op, kEvH2On,
-                                  crKDiffH2O, crKDiffH2O], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
+    # Определяем сопротивления мембраны (вместе с диффузией воды)
+    rm = funRm(TFEl, nuH2Op, nuH2On, nuH2Osm,
+               alphaRTm, bRTm, cRTm, betaRT2m,
+               betaRT3m, betaKRmH2O2, betaKRmH2O3)
 
-    # Перекрестные блоки кинетической матрицы по процессам
-    kineticMatrixPCHeat = np.array([crKElTEvp, crKElTEvn, crKElTQp, crKElTQn], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
-    kineticMatrixHeatPC = np.array([crKElTEvp, crKElTEvn, crKElTQp, crKElTQn], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
+    # Определяем обратимые и необратимые составляющие кинетической матрицы положительной камеры
+    kInvMatrixElEvs = np.array([0, 0, 1], dtype=np.double).reshape(-1, 1)
+    kInvMatrixElpEchCr = (np.sqrt(np.array([1 / Rbin0p, 0, dKElTQp0],
+                                            dtype=np.double)) * np.array([1, 1, crQKElp],
+                                                                         dtype=np.double)).reshape(-1, 1)
+    kInvMatrixElpEvCr = (np.sqrt(np.array([0, kEvH2Osp, dKElTEvp0],
+                                           dtype=np.double)) * np.array([1, 1, crEvH20KElp],
+                                                                        dtype=np.double)).reshape(-1, 1)
+    kNoInvMatrixElp = np.array([KElTop * Tokr / TOkrs + \
+                                dKElTQp0 * (Tokr / TOkrs - np.power(crQKElp, 2)) / rbinp + \
+                                dKElTEvp0 * (Tokr / TOkrs - np.power(crEvH20KElp, 2)) * kbinp,
+                                1 / rbinp, kbinp], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
 
-    # Главный блок кинетической матрицы по теплообмену
-    KFEl = ReluFilter(KFEl)
-    KElTop = ReluFilter(KElTop)
-    KElTon = ReluFilter(KElTon)
-    KElp = ReluFilter(KElp)
-    KEln = ReluFilter(KEln)
-    kineticMatrixHeatHeat = np.array([KFEl,
-                                      KElTop + dKElTEvp + dKElTQp,
-                                      KElTon + dKElTEvn + dKElTQn,
-                                      KElp, KEln], dtype=np.double) * np.power(Tokr, 2) / (21.55 * NonEqSystemQBase.GetTbase())
+    # Определяем обратимые и необратимые составляющие кинетической матрицы отрицательной камеры
+    kInvMatrixElnEchCr = (np.sqrt(np.array([1 / Rbin0n, 0, dKElTQn0],
+                                            dtype=np.double)) * np.array([1, 1, crQKEln],
+                                                                         dtype=np.double)).reshape(-1, 1)
+    kInvMatrixElnEvCr = (np.sqrt(np.array([0, kEvH2Osn, dKElTEvn0],
+                                           dtype=np.double)) * np.array([1, 1, crEvH20KEln],
+                                                                        dtype=np.double)).reshape(-1, 1)
+    kNoInvMatrixEln = np.array([KElTon * Tokr / TOkrs + \
+                                dKElTQn0 * (Tokr / TOkrs - np.power(crQKEln, 2)) / rbinn + \
+                                dKElTEvn0 * (Tokr / TOkrs - np.power(crEvH20KEln, 2)) * kbinn,
+                                1 / rbinn, kbinn], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
 
-    # Определяем теплоемкости
-    CFEl = CFEls + cFElH2O * (nuH2Op + nuH2On)  # Темплоемкость элемента
-    CElp = CElsp + cElH2OStp * nuH2OStp + cElO2p * nuO2  # Теплоемкость положительного электрода
-    CEln = CElsn + cElH2OStn * nuH2OStn + cElH2n * nuH2  # Теплоемкость отрицательного электрода
+    # Определяем обратимые и необратимые составляющие кинетической матрицы мембраны
+    kInvMatrixElmDiffs = np.array([0, 1], dtype=np.double).reshape(-1, 1)
+    kInvMatrixElmCr = (np.sqrt(np.array([1 / Rm0, dKDiffH2O0],
+                                        dtype=np.double)) * np.array([1, crRmDiffH2O],
+                                                                     dtype=np.double)).reshape(-1, 1)
+    kNoInvMatrixElm = np.array([kDiffH2O0 + dKDiffH2O0 * (1 - np.power(crRmDiffH2O, 2)) / rm,
+                                1 / rm], dtype=np.double) * Tokr / (4.642 * NonEqSystemQBase.GetTbase())
 
-    # Обратная теплоемкость водородно-воздушного топливного элемента
-    invHeatCapacityMatrixCf = 1 / np.array([CFEl, CElp, CEln], dtype=np.double)
-
-    # Приведенные тепловые эффекты водородно-воздушного топливного элемента
-    heatEffectsGH2O = -np.array([hH2Op, hH2On, hH2OStp, hH2OStn, hO2, hH2], dtype=np.double)
-    heatEffectMatrixCf = np.hstack([potentialInter[0:3], heatEffectsGH2O]) / np.array([CFEl, CFEl, CFEl, CFEl, CFEl, CElp, CEln, CElp, CEln], dtype=np.double)
+    # Определяем необратимые составляющие динамической матрицы по теплообмену с окружающей средой
+    kQOkr = np.array([KFEl, KElp, KEln], dtype=np.double) * np.power(Tokr, 2) / (4.642 * TOkrs * NonEqSystemQBase.GetTbase())
 
     # Выводим результат
-    return (balanceMatrix,
-            stateCoordinatesStreams,
-            heatEnergyPowersStreams,
-            energyPowerTemperatures,
-            potentialInter,
-            potentialInterBet,
-            beta, kineticMatrixPCPC,
-            kineticMatrixPCHeat,
-            kineticMatrixHeatPC,
-            kineticMatrixHeatHeat,
-            invHeatCapacityMatrixCf,
-            heatEffectMatrixCf)
+    return (evExtH2Op, evExtH2On,
+            evExtO2, evExtH2, QKl,
+            JSzEl, HSzTEl,
+            JSTEl, HSTTEl,
+            JSzCamp, HSzTCamp,
+            JSTCamp, HSTTCamp,
+            JSzCamn, HSzTCamn,
+            JSTCamn, HSTTCamn,
+            kInvMatrixElEvs,
+            kInvMatrixElpEchCr,
+            kInvMatrixElpEvCr,
+            kNoInvMatrixElp,
+            kInvMatrixElnEchCr,
+            kInvMatrixElnEvCr,
+            kNoInvMatrixEln,
+            kInvMatrixElmDiffs,
+            kInvMatrixElmCr,
+            kNoInvMatrixElm,
+            kQOkr, I, Tokr,
+            qExtp, qExtn)

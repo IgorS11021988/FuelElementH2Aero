@@ -1,7 +1,5 @@
 import numpy as np
 
-from MathProtEnergyProc.CorrectionModel import PosLinearFilter
-
 
 # Вспомогательные функции
 def funRI(alphaRI, dissU):  # Мультипликативная корректировка по току через двойной слой
@@ -30,50 +28,73 @@ def funHMuLin(rNu, HMus, dHMus,
     return HMu + dHMus * (betaHMu2 * np.power(rNu, 2) + betaHMu3 * np.power(rNu, 3))
 
 
-def funHMuH2O(nuH2O, TFEl,
-              nuH2Os, THMus,
-              muH2Os, dmuH2Os,
-              hH2Os, dhH2Os,
-              betaMuH2O2, betaMuH2O3,
-              betaHH2O2, betaHH2O3,
-              cFElH2O):  # Характерный химический потенциал кислорода в мембране
+def funJHSzTEl(qbinp, qm, qbinn,
+               nuH2Op, nuH2On, TFEl,
+               Cbinp, Cm, Cbinn, Econ,
+               nuH2Os, THMus, muH2Os,
+               dmuH2Os, hH2Os, dhH2Os,
+               betaMuH2O2, betaMuH2O3,
+               betaHH2O2, betaHH2O3,
+               cFElH2O, CFEls):  # Характерный химический потенциал кислорода в мембране
     # Относительное число молей пропитывающей воды
-    rNuH2O = nuH2O / nuH2Os
+    rNuH2Op = nuH2Op / nuH2Os
+    rNuH2On = nuH2On / nuH2Os
 
     # Химический потенциал пропитывающей воды при стандартной температуре
-    muH2O = funHMuLin(rNuH2O, muH2Os, dmuH2Os,
-                      betaMuH2O2, betaMuH2O3)
+    muH2Op = funHMuLin(rNuH2Op, muH2Os, dmuH2Os,
+                       betaMuH2O2, betaMuH2O3)
+    muH2On = funHMuLin(rNuH2On, muH2Os, dmuH2Os,
+                       betaMuH2O2, betaMuH2O3)
 
     # Тепловой потенциал пропитывающей воды при стандартной температуре
-    hH2O = funHMuLin(rNuH2O, hH2Os, dhH2Os,
-                     betaHH2O2, betaHH2O3)
+    hH2Ops = funHMuLin(rNuH2Op, hH2Os, dhH2Os,
+                       betaHH2O2, betaHH2O3)
+    hH2Ons = funHMuLin(rNuH2On, hH2Os, dhH2Os,
+                       betaHH2O2, betaHH2O3)
 
     # Приведенные температуры
     rTFEl = TFEl / THMus  # Относительная температура
     dTFEl = TFEl - THMus  # Температура относительно уровня
     lTFEl = dTFEl - TFEl * np.log(rTFEl)
 
-    # Химический потенциал пропитывающей воды
-    muH2O += (muH2O - hH2O) * (rTFEl - 1) + cFElH2O * lTFEl
+    # Падения напряжений на двойных слоях
+    dissUbinp =  Econ - qbinp / Cbinp  # Положительный двойной слой
+    dissUbinn = -Econ - qbinn / Cbinn  # Отрицательный двойной слой
 
-    # Тепловой потенциал пропитывающей воды
-    hH2O += cFElH2O * dTFEl
+    # Теплоемкость топливного элемента
+    CFEl = CFEls + cFElH2O * (nuH2Op + nuH2On)
+
+    # Матрица Якоби приведенной энтропии по координатам состояния
+    JSzElH2Op = -hH2Ops - (muH2Op - hH2Ops) * rTFEl - cFElH2O * lTFEl
+    JSzElH2On = -hH2Ons - (muH2On - hH2Ons) * rTFEl - cFElH2O * lTFEl
+    JSzEl = np.array([dissUbinp, -qm / Cm, dissUbinn,
+                      JSzElH2Op, JSzElH2On], dtype=np.double) / TFEl
+
+    # Матрица Гесса приведенной энтропии по координатам состояния и температуре
+    HSzTElH2Op = hH2Ops + cFElH2O * dTFEl
+    HSzTElH2On = hH2Ons + cFElH2O * dTFEl
+    HSzTEl = np.array([-dissUbinp, qm / Cm, -dissUbinn,
+                       HSzTElH2Op, HSzTElH2On], dtype=np.double) / np.power(TFEl, 2)
+
+    # Приведенные первая и вторая производные приведенной энтропии по температуре
+    JSTEl = CFEl * dTFEl / np.power(TFEl, 2)
+    HSTTEl = CFEl * (2 * THMus - TFEl) / np.power(TFEl, 3)
 
     # Выводим результат
-    return (muH2O, hH2O)
+    return (JSzEl, HSzTEl, JSTEl, HSTTEl, dissUbinp, dissUbinn)
 
 
 def funHMuLog(rNu, HMus, dHMus):
     return HMus + dHMus * np.log(rNu)
 
 
-def funHMuCam(nuH2OSt, nuG, TCam,
-              nuH2OSts, nuGs, THMus,
-              muH2OSts, dmuH2OSts, muGs, dmuGs,
-              hH2OSts, dhH2OSts, hGs, dhGs,
-              betaMuH2OSt, betaMuH2OStG, betaMuG,
-              betaHH2OSt, betaHH2OStG, betaHG,
-              cElH2OSt, cElG):  # Определяем химические потенциалы кислорода и воды в камере положительного электрода
+def funJHSzTCam(nuH2OSt, nuG, TCam,
+                nuH2OSts, nuGs, THMus,
+                muH2OSts, dmuH2OSts, muGs, dmuGs,
+                hH2OSts, dhH2OSts, hGs, dhGs,
+                betaMuH2OSt, betaMuH2OStG, betaMuG,
+                betaHH2OSt, betaHH2OStG, betaHG,
+                cElH2OSt, cElG, CEls):  # Определяем химические потенциалы кислорода и воды в камере положительного электрода
     # Определяем отнисительные числа молей воды и газа
     rNuH2OStG = np.sqrt(nuH2OSts * nuGs)
     rNuH2OSt = nuH2OSt / nuH2OSts
@@ -82,28 +103,37 @@ def funHMuCam(nuH2OSt, nuG, TCam,
     rCrNuG = nuG / rNuH2OStG
 
     # Определяем химические потенциалы воды и газа при стандартной температуре
-    muH2OSt = funHMuLog(rNuH2OSt, muH2OSts, dmuH2OSts) + betaMuH2OSt * rNuH2OSt + betaMuH2OStG * rCrNuG
-    muG = funHMuLog(rNuG, muGs, dmuGs) + betaMuH2OStG * rCrNuH2OSt + betaMuG * rNuG
+    muH2OSts = funHMuLog(rNuH2OSt, muH2OSts, dmuH2OSts) + betaMuH2OSt * rNuH2OSt + betaMuH2OStG * rCrNuG
+    muGs = funHMuLog(rNuG, muGs, dmuGs) + betaMuH2OStG * rCrNuH2OSt + betaMuG * rNuG
 
     # Определяем тепловые потенциалы воды и газа при стандартной температуре
-    hH2OSt = funHMuLog(rNuH2OSt, hH2OSts, dhH2OSts) + betaHH2OSt * rNuH2OSt + betaHH2OStG * rCrNuG
-    hG = funHMuLog(rNuG, hGs, dhGs) + betaHH2OStG * rCrNuH2OSt + betaHG * rNuG
+    hH2OSts = funHMuLog(rNuH2OSt, hH2OSts, dhH2OSts) + betaHH2OSt * rNuH2OSt + betaHH2OStG * rCrNuG
+    hGs = funHMuLog(rNuG, hGs, dhGs) + betaHH2OStG * rCrNuH2OSt + betaHG * rNuG
 
     # Приведенные температуры
     rTCam = TCam / THMus  # Относительная температура
     dTCam = TCam - THMus  # Температура относительно уровня
     lTCam = dTCam - TCam * np.log(rTCam)
 
-    # Определяем химические потенциалы воды и газа
-    muH2OSt += (muH2OSt - hH2OSt) * (rTCam - 1) + cElH2OSt * lTCam
-    muG += (muG - hG) * (rTCam - 1) + cElG * lTCam
+    # Определяем теплоемкость камеры
+    CCam = CEls + cElH2OSt * nuH2OSt + cElG * nuG
 
-    # Определяем тепловые потенциалы воды и газа при стандартной температуре
-    hH2OSt += cElH2OSt * dTCam
-    hG += cElG * dTCam
+    # Определяем матрицу Якоби по числам молей
+    JSzCamH2OSt = -hH2OSts - (muH2OSts - hH2OSts) * rTCam - cElH2OSt * lTCam
+    JSzCamG = -hGs - (muGs - hGs) * rTCam - cElG * lTCam
+    JSzCam = np.array([JSzCamH2OSt, JSzCamG], dtype=np.double) / TCam
+
+    # Определяем Гесса приведенной энтропии по координатам состояния и температуре
+    HSzTCamH2OSt = hH2OSts + cElH2OSt * dTCam
+    HSzTCamG = hGs + cElG * dTCam
+    HSzTCam = np.array([HSzTCamH2OSt, HSzTCamG], dtype=np.double) / np.power(TCam, 2)
+
+    # Приведенные первая и вторая производные приведенной энтропии по температуре
+    JSTCam = CCam * dTCam / np.power(TCam, 2)
+    HSTTCam = CCam * (2 * THMus - TCam) / np.power(TCam, 3)
 
     # Выводим результат
-    return (muH2OSt, muG, hH2OSt, hG)
+    return (JSzCam, HSzTCam, JSTCam, HSTTCam)
 
 
 def funKrmH2O(nuH2Op, nuH2On, nuH2Osm):
@@ -121,8 +151,7 @@ def funKTEvH2O(TFEl, TEl, alphaKTEvH2Os, bTKEvH2Os, cTKEvH2Os):
 # Функции для свойств веществ и процессов
 def funRbin(TFEl, dissUbinp, dissUbinn, alphaRIp,
             alphaRIn, alphaRTp, alphaRTn, bRTp,
-            bRTn, cRTp, cRTn, Rbin0p, Rbin0n, dKElTQp0, dKElTQn0,
-            crQKElp, crQKEln, betaRI2p, betaRI2n,
+            bRTn, cRTp, cRTn, betaRI2p, betaRI2n,
             betaRI3p, betaRI3n, betaRT2p, betaRT2n,
             betaRT3p, betaRT3n):  # Функция сопротивления двойных слоев
     # Определяем корректировку сопротивления двойных слоев через токи двойных слоев
@@ -141,24 +170,13 @@ def funRbin(TFEl, dissUbinp, dissUbinn, alphaRIp,
     rTbinp += betaRT2p * np.power(rTbinp, 2) + betaRT3p * np.power(rTbinp, 3)
     rTbinn += betaRT2n * np.power(rTbinn, 2) + betaRT3n * np.power(rTbinn, 3)
 
-    # Определяем корректирующие коэффициенты сопротивлений двойных слоев
-    rbinp = rIbinp * rTbinp  # Положительный двойной слой
-    rbinn = rIbinn * rTbinn  # Отрицательный двойной слой
-
     # Выводим результат
-    rbinp = PosLinearFilter(rbinp)
-    rbinn = PosLinearFilter(rbinn)
-    return (Rbin0p * rbinp,
-            Rbin0n * rbinn,
-            dKElTQp0 / rbinp,
-            dKElTQn0 / rbinn,
-            crQKElp * np.sqrt(dKElTQp0 / Rbin0p) / rbinp,
-            crQKEln * np.sqrt(dKElTQn0 / Rbin0n) / rbinn)
+    return (rIbinp * rTbinp,
+            rIbinn * rTbinn)
 
 
 def funRm(TFEl, nuH2Op, nuH2On, nuH2Osm,
-          alphaRTm, bRTm, cRTm, Rm0, kDiffH2O0,
-          dKDiffH2O0, crRmDiffH2O, betaRT2m,
+          alphaRTm, bRTm, cRTm, betaRT2m,
           betaRT3m, betaKRmH2O2, betaKRmH2O3):  # Функция сопротивления мембраны
     # Определяем температурный коэффициент сопротивления мембраны
     rm = funRT(-alphaRTm, bRTm, cRTm, TFEl)
@@ -172,14 +190,8 @@ def funRm(TFEl, nuH2Op, nuH2On, nuH2Osm,
     # Добавляем довесочные члены к увлажняющему коэффициенту сопротивления мембраны
     krmH2O += betaKRmH2O2 * np.power(krmH2O, 2) + betaKRmH2O3 * np.power(krmH2O, 3)
 
-    # Определяем корректирующий коэффициент сопротивления мембраны
-    cf = rm * (1 + krmH2O)
-
     # Выводим результат
-    cf = PosLinearFilter(cf)
-    return (Rm0 * cf,
-            kDiffH2O0 + dKDiffH2O0 / cf,
-            crRmDiffH2O * np.sqrt(dKDiffH2O0 / Rm0) / cf)
+    return rm * (1 + krmH2O)
 
 
 def funCbin(qbinp, qbinn, alphaCQp, alphaCQn, Cbin0p, Cbin0n,
@@ -223,13 +235,9 @@ def funEvH2O(TFEl, TElp, TEln, nuH2Op, nuH2On, nuH2OStp,
     kNuEvH2On += betaKNuEvH2On2 * np.power(kNuEvH2On, 2) + betaKNuEvH2On3 * np.power(kNuEvH2On, 3)
 
     # Итоговый корректирующий коэффициент
-    cfp = kTEvH2Op * kNuEvH2Op
-    cfn = kTEvH2On * kNuEvH2On
+    kbinp = kTEvH2Op * kNuEvH2Op
+    kbinn = kTEvH2On * kNuEvH2On
 
     # Выводим результат
-    cfp = PosLinearFilter(cfp)
-    cfn = PosLinearFilter(cfn)
-    return (kEvH2Osp * cfp, kEvH2Osn * cfn,
-            dKElTEvp0 * cfp, dKElTEvn0 * cfn,
-            crEvH20KElp * np.sqrt(kEvH2Osp * dKElTEvp0) * cfp,
-            crEvH20KEln * np.sqrt(kEvH2Osn * dKElTEvn0) * cfn)
+    return (kTEvH2Op * kNuEvH2Op,
+            kTEvH2On * kNuEvH2On)
