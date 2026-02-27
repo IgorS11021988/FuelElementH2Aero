@@ -236,10 +236,6 @@ def funEvH2O(TFEl, TElp, TEln, nuH2Op, nuH2On, nuH2OStp,
     kNuEvH2Op += betaKNuEvH2Op2 * np.power(kNuEvH2Op - 1, 2) + betaKNuEvH2Op3 * np.power(kNuEvH2Op - 1, 3)
     kNuEvH2On += betaKNuEvH2On2 * np.power(kNuEvH2On - 1, 2) + betaKNuEvH2On3 * np.power(kNuEvH2On - 1, 3)
 
-    # Итоговый корректирующий коэффициент
-    kbinp = kTEvH2Op * kNuEvH2Op
-    kbinn = kTEvH2On * kNuEvH2On
-
     # Выводим результат
     return (kTEvH2Op * kNuEvH2Op,
             kTEvH2On * kNuEvH2On)

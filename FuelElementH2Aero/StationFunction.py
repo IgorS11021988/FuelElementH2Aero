@@ -219,7 +219,7 @@ def IndepStateFunction(stateCoordinates,
                               nuH2OStn, nuH2OsEvp, nuH2OsEvn, kEvH2Osp,
                               kEvH2Osn, dKElTEvp0, dKElTEvn0, crEvH20KElp,
                               crEvH20KEln, alphaKTEvH2Osp, alphaKTEvH2Osn,
-                              bTKEvH2Osp, bTKEvH2Osn, cTKEvH2Osp, cTKEvH2Osn, 
+                              bTKEvH2Osp, bTKEvH2Osn, cTKEvH2Osp, cTKEvH2Osn,
                               betaKTEvH2Op2, betaKTEvH2On2, betaKNuEvH2Op2,
                               betaKNuEvH2On2, betaKTEvH2Op3, betaKTEvH2On3,
                               betaKNuEvH2Op3, betaKNuEvH2On3)
@@ -232,11 +232,11 @@ def IndepStateFunction(stateCoordinates,
     # Определяем обратимые и необратимые составляющие кинетической матрицы положительной камеры
     kInvMatrixElEvs = np.array([0, 0, 1], dtype=np.double).reshape(-1, 1)
     kInvMatrixElpEchCr = (np.sqrt(np.array([1 / Rbin0p, 0, dKElTQp0],
-                                            dtype=np.double)) * np.array([1, 1, crQKElp],
-                                                                         dtype=np.double)).reshape(-1, 1)
-    kInvMatrixElpEvCr = (np.sqrt(np.array([0, kEvH2Osp, dKElTEvp0],
-                                           dtype=np.double)) * np.array([1, 1, crEvH20KElp],
+                                           dtype=np.double)) * np.array([1, 1, crQKElp],
                                                                         dtype=np.double)).reshape(-1, 1)
+    kInvMatrixElpEvCr = (np.sqrt(np.array([0, kEvH2Osp, dKElTEvp0],
+                                          dtype=np.double)) * np.array([1, 1, crEvH20KElp],
+                                                                       dtype=np.double)).reshape(-1, 1)
     kNoInvMatrixElp = np.array([KElTop * Tokr / TOkrs + \
                                 dKElTQp0 * (Tokr / TOkrs - np.power(crQKElp, 2)) * sbinp + \
                                 dKElTEvp0 * (Tokr / TOkrs - np.power(crEvH20KElp, 2)) * kbinp,
@@ -244,11 +244,11 @@ def IndepStateFunction(stateCoordinates,
 
     # Определяем обратимые и необратимые составляющие кинетической матрицы отрицательной камеры
     kInvMatrixElnEchCr = (np.sqrt(np.array([1 / Rbin0n, 0, dKElTQn0],
-                                            dtype=np.double)) * np.array([1, 1, crQKEln],
-                                                                         dtype=np.double)).reshape(-1, 1)
-    kInvMatrixElnEvCr = (np.sqrt(np.array([0, kEvH2Osn, dKElTEvn0],
-                                           dtype=np.double)) * np.array([1, 1, crEvH20KEln],
+                                           dtype=np.double)) * np.array([1, 1, crQKEln],
                                                                         dtype=np.double)).reshape(-1, 1)
+    kInvMatrixElnEvCr = (np.sqrt(np.array([0, kEvH2Osn, dKElTEvn0],
+                                          dtype=np.double)) * np.array([1, 1, crEvH20KEln],
+                                                                       dtype=np.double)).reshape(-1, 1)
     kNoInvMatrixEln = np.array([KElTon * Tokr / TOkrs + \
                                 dKElTQn0 * (Tokr / TOkrs - np.power(crQKEln, 2)) * sbinn + \
                                 dKElTEvn0 * (Tokr / TOkrs - np.power(crEvH20KEln, 2)) * kbinn,
