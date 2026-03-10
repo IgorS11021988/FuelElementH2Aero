@@ -39,10 +39,10 @@ def CharacteristicsFunction(t,  # Моменты времени
     alphaCQp = otherSystemParameters[59]  # Зарядовый коэффициент емкости положительного электрода, 1/Кл
     alphaCQn = otherSystemParameters[60]  # Зарядовый коэффициент емкости отрицательного электрода, 1/Кл
 
-    betaCQ2p = otherSystemParameters[93]
-    betaCQ2n = otherSystemParameters[94]
-    betaCQ3p = otherSystemParameters[95]
-    betaCQ3n = otherSystemParameters[96]
+    betaCQ2p = otherSystemParameters[101]
+    betaCQ2n = otherSystemParameters[102]
+    betaCQ3p = otherSystemParameters[103]
+    betaCQ3n = otherSystemParameters[104]
 
     # Получаем сопротивление клемм
     Rkl = otherSystemParameters[-1]
