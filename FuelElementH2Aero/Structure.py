@@ -46,39 +46,19 @@ def StructureFunction():
     heatEnergyPowersVarStreamsNames = ["EnPowFEl", "EnPowElp", "EnPowEln"]  # Имена переменных внешних потоков теплоты
 
     # Коэффициенты кинетической матрицы
-    kinMatrixElp = KineticMatrixQ(["dqbinp", "evH2Op"],  # Имена сопряженностей между собой координат процессов
-                                  ["dqbinp", "evH2Op"],  # Имена сопряженностей между собой термодинамических сил
-                                  ["evH2Op", "dqbinp"],  # Имена сопряженностей координат процессов с теплопереносами
-                                  [ "QFElp",  "QFElp"],  # Имена сопряженностей термодинамических сил с теплопереносами
-                                  [ "QFElp",  "QFElp"],  # Имена сопряженностей теплопереносов с координатами процессов
-                                  ["evH2Op", "dqbinp"],  # Имена сопряженностей теплопереносов с термодинамическими силами
-                                  ["QFElp"],  # Имена сопряженностей между собой перенесенных теплот
-                                  ["QFElp"],  # Имена сопряженностей между собой термодинамических сил по переносу теплот
+    kinMatrixEl = KineticMatrixQ(["dqbinp", "evH2Op", "dqbinn", "evH2On", "dqm", "diffH2O",     "dqm", "diffH2O"],  # Имена сопряженностей между собой координат процессов
+                                 ["dqbinp", "evH2Op", "dqbinn", "evH2On", "dqm", "diffH2O", "diffH2O",     "dqm"],  # Имена сопряженностей между собой термодинамических сил
+                                 ["evH2Op", "dqbinp", "evH2On", "dqbinn"],  # Имена сопряженностей координат процессов с теплопереносами
+                                 [ "QFElp",  "QFElp",  "QFEln",  "QFEln"],  # Имена сопряженностей термодинамических сил с теплопереносами
+                                 [ "QFElp",  "QFElp",  "QFEln",  "QFEln"],  # Имена сопряженностей теплопереносов с координатами процессов
+                                 ["evH2Op", "dqbinp", "evH2On", "dqbinn"],  # Имена сопряженностей теплопереносов с термодинамическими силами
+                                 ["QFElp", "QFEln"],  # Имена сопряженностей между собой перенесенных теплот
+                                 ["QFElp", "QFEln"],  # Имена сопряженностей между собой термодинамических сил по переносу теплот
 
-                                  [["dqbinp", "evH2Op", "QFElp"]]  # Массив массивов имен координат процессов (в том числе и перенесенных теплот) по кинетической матрице
-                                  )  # Кинетическая матрица по камере положительного электрода
-    kinMatrixEln = KineticMatrixQ(["dqbinn", "evH2On"],  # Имена сопряженностей между собой координат процессов
-                                  ["dqbinn", "evH2On"],  # Имена сопряженностей между собой термодинамических сил
-                                  ["evH2On", "dqbinn"],  # Имена сопряженностей координат процессов с теплопереносами
-                                  [ "QFEln",  "QFEln"],  # Имена сопряженностей термодинамических сил с теплопереносами
-                                  [ "QFEln",  "QFEln"],  # Имена сопряженностей теплопереносов с координатами процессов
-                                  ["evH2On", "dqbinn"],  # Имена сопряженностей теплопереносов с термодинамическими силами
-                                  ["QFEln"],  # Имена сопряженностей между собой перенесенных теплот
-                                  ["QFEln"],  # Имена сопряженностей между собой термодинамических сил по переносу теплот
-
-                                  [["dqbinn", "evH2On", "QFEln"]]  # Массив массивов имен координат процессов (в том числе и перенесенных теплот) по кинетической матрице
-                                  )  # Кинетическая матрица по камере отрицательного электрода
-    kinMatrixElm = KineticMatrixQ(["dqm", "diffH2O",     "dqm", "diffH2O"],  # Имена сопряженностей между собой координат процессов
-                                  ["dqm", "diffH2O", "diffH2O",     "dqm"],  # Имена сопряженностей между собой термодинамических сил
-                                  [],  # Имена сопряженностей координат процессов с теплопереносами
-                                  [],  # Имена сопряженностей термодинамических сил с теплопереносами
-                                  [],  # Имена сопряженностей теплопереносов с координатами процессов
-                                  [],  # Имена сопряженностей теплопереносов с термодинамическими силами
-                                  [],  # Имена сопряженностей между собой перенесенных теплот
-                                  [],  # Имена сопряженностей между собой термодинамических сил по переносу теплот
-
-                                  [["dqm", "diffH2O"]]  # Массив массивов имен координат процессов (в том числе и перенесенных теплот) по кинетической матрице
-                                  )  # Кинетическая матрица по мембране элемента
+                                 [["dqbinp", "evH2Op", "QFElp"],
+                                  ["dqbinn", "evH2On", "QFEln"],
+                                  ["dqm", "diffH2O"]]  # Массив массивов имен координат процессов (в том числе и перенесенных теплот) по кинетической матрице
+                                 )  # Кинетическая матрица по водородно-воздушному топливному элементу
 
     # Потенциалы взаимодействия в топливном элементе и камерах
     potentialInterElAll = IntPotentialsOne(["qbinp", "qm", "qbinn", "nuH2Op", "nuH2On", "nuH2OStp", "nuO2", "nuH2OStn", "nuH2"],  # Имена координат состояния
@@ -151,46 +131,27 @@ def StructureFunction():
         kMatrixElp = KineticMatrixFromPosSubMatrix(PosLinearFilter(kNoInvMatrixElp),  # Положительные определенные составляющие атрицы
                                                    [kInvMatrixElEvs, kInvMatrixElpEchCr, kInvMatrixElpEvCr]  # Податрицы баланса
                                                    )
-        (kineticMatrixPCPCElp,
-         kineticMatrixPCHeatElp,
-         kineticMatrixHeatPCElp,
-         kineticMatrixHeatHeatElp) = kinMatrixElp([kMatrixElp])
 
         # Определяем кинетическую матрицу отрицательной камеры
         kMatrixEln = KineticMatrixFromPosSubMatrix(PosLinearFilter(kNoInvMatrixEln),  # Положительные определенные составляющие атрицы
                                                    [kInvMatrixElEvs, kInvMatrixElnEchCr, kInvMatrixElnEvCr]  # Податрицы баланса
                                                    )
-        (kineticMatrixPCPCEln,
-         kineticMatrixPCHeatEln,
-         kineticMatrixHeatPCEln,
-         kineticMatrixHeatHeatEln) = kinMatrixEln([kMatrixEln])
 
         # Определяем кинетическую матрицу мембраны
         kMatrixElm = KineticMatrixFromPosSubMatrix(PosLinearFilter(kNoInvMatrixElm),  # Положительные определенные составляющие атрицы
                                                    [kInvMatrixElmDiffs, kInvMatrixElmCr]  # Податрицы баланса
                                                    )
-        (kineticMatrixPCPCElm,
-         kineticMatrixPCHeatElm,
-         kineticMatrixHeatPCElm,
-         kineticMatrixHeatHeatElm) = kinMatrixElm([kMatrixElm])
 
-        # Главный блок кинетической матрицы по процессам
-        kineticMatrixPCPC = np.hstack([kineticMatrixPCPCElp,
-                                       kineticMatrixPCPCEln,
-                                       kineticMatrixPCPCElm])
-
-        # Перекрестные блоки кинетической матрицы по процессам
-        kineticMatrixPCHeat = np.hstack([kineticMatrixPCHeatElp,
-                                         kineticMatrixPCHeatEln,
-                                         kineticMatrixPCHeatElm])
-        kineticMatrixHeatPC = np.hstack([kineticMatrixHeatPCElp,
-                                         kineticMatrixHeatPCEln,
-                                         kineticMatrixHeatPCElm])
+        # Определение кинеттической матрицы топливного элемента без учета теплообмена с окружающей средой
+        (kineticMatrixPCPC,
+         kineticMatrixPCHeat,
+         kineticMatrixHeatPC,
+         kineticMatrixHeatHeat) = kinMatrixEl([kMatrixElp,
+                                               kMatrixEln,
+                                               kMatrixElm])
 
         # Главный блок кинетической матрицы по теплообмену
-        kineticMatrixHeatHeat = np.hstack([kineticMatrixHeatHeatElp,
-                                           kineticMatrixHeatHeatEln,
-                                           kineticMatrixHeatHeatElm,
+        kineticMatrixHeatHeat = np.hstack([kineticMatrixHeatHeat,
                                            ReluFilter(kQOkr)])
 
         # Определяем обратную теплоемкость и приведенные тепловые эффекты топливного элемента
