@@ -1,7 +1,45 @@
 import numpy as np
 
+from MathProtEnergyProcBase.IndexFunctions import GetIndex, GetIndexes
+
+from .StationFunction import stateCoordinatesNames, reducedTemperaturesEnergyPowersNames, USystemParametersNames
 from .StationFunctions import funCbin
-from .fICharge import fICharge
+from .fU import fU, otherSystemParametersNames
+
+
+# Индексы координат состояния
+qbinpInd = GetIndex(stateCoordinatesNames, "qbinp")  # Индекс заряда положительного электрода
+qmInd = GetIndex(stateCoordinatesNames, "qm")  # Индекс заряда мембраны
+qbinnInd = GetIndex(stateCoordinatesNames, "qbinn")  # Индекс заряда отрицательного электрода
+nuH2OpInd = GetIndex(stateCoordinatesNames, "nuH2Op")  # Индекс зарядового числа молей воды в приэлектродной области положительного электрода
+nuH2OnInd = GetIndex(stateCoordinatesNames, "nuH2On")  # Индекс зарядового числа молей воды в приэлектродной области отрицательного электрода
+nuH2OStpInd = GetIndex(stateCoordinatesNames, "nuH2OStp")  # Индекс зарядового числа молей воды в камере положительного электрода
+nuH2OStnInd = GetIndex(stateCoordinatesNames, "nuH2OStn")  # Индекс зарядового числа молей воды в камере отрицательного электрода
+nuO2Ind = GetIndex(stateCoordinatesNames, "nuO2")  # Индекс зарядового числа молей кислорода
+nuH2Ind = GetIndex(stateCoordinatesNames, "nuH2")  # Индекс зарядового числа молей водорода
+
+# Индексы приведенных температур
+TFElInd = GetIndex(reducedTemperaturesEnergyPowersNames, "TFEl")  # Температура топливного элемента
+TElpInd = GetIndex(reducedTemperaturesEnergyPowersNames, "TElp")  # Температура в камере положительного электрода
+TElnInd = GetIndex(reducedTemperaturesEnergyPowersNames, "TEln")  # Температура в камере отрицательного электрода
+
+# Индексы переменных параметров системы
+IInd = GetIndex(USystemParametersNames, "I")  # Индекс тока
+
+# Индексы параметров системы
+systemParametersIndexes = GetIndexes(otherSystemParametersNames, ["Cbin0p",  # Емкость положительного двойного слоя
+                                                                  "Cm",  # Емкость мембраны
+                                                                  "Cbin0n",  # Емкость отрицательного двойного слоя
+                                                                  "alphaCQp",  # Зарядовый коэффициент емкости положительного электрода
+                                                                  "alphaCQn",  # Зарядовый коэффициент емкости отрицательного электрода
+
+                                                                  "betaCQ2p",
+                                                                  "betaCQ2n",
+                                                                  "betaCQ3p",
+                                                                  "betaCQ3n",
+
+                                                                  "Rkl"  # Сопротивление клемм
+                                                                  ])
 
 
 # Функция состояния для литий-ионного аккумулятора
@@ -11,41 +49,42 @@ def CharacteristicsFunction(t,  # Моменты времени
                             systemParameters  # Параметры системы
                             ):
     # Получаем динамику тока
-    (Icur, otherSystemParameters) = fICharge(np.array(t, dtype=np.double),  # Моменты времени
-                                             systemParameters  # Параметры системы
-                                             )
-    Icur = np.array(Icur, dtype=np.double).reshape(-1)  # Приводим токи к одномерному массиву
+    (USystemParameters,
+     otherSystemParameters) = fU(t,  # Моменты времени
+                                 systemParameters  # Параметры системы
+                                 )
+    I = USystemParameters[:, IInd]  # Ток в текущие моменты времени
 
     # Получаем координаты состояния
-    qbinp = stateCoordinates[:, 0]  # Заряд на положительном двойном слое
-    qm = stateCoordinates[:, 1]  # Заряд на мембране
-    qbinn = stateCoordinates[:, 2]  # Заряд на отрицательном двойном слое
-    nuH2Op = stateCoordinates[:, 3]  # Число молей воды в приэлектродной области положительного электрода
-    nuH2On = stateCoordinates[:, 4]  # Число молей воды в приэлектродной области отрицательного электрода
-    nuH2OStp = stateCoordinates[:, 5]  # Приведенное число молей воды в камере положительного электрода
-    nuH2OStn = stateCoordinates[:, 6]  # Приведенное число молей воды в камере отрицательного электрода
-    nuO2 = stateCoordinates[:, 7]  # Число молей кислорода
-    nuH2 = stateCoordinates[:, 8]  # Число молей водорода
+    qbinp = stateCoordinates[:, qbinpInd]  # Заряд на положительном двойном слое
+    qm = stateCoordinates[:, qmInd]  # Заряд на мембране
+    qbinn = stateCoordinates[:, qbinnInd]  # Заряд на отрицательном двойном слое
+    nuH2Op = stateCoordinates[:, nuH2OpInd]  # Зарядовое число молей воды в приэлектродной области положительного электрода
+    nuH2On = stateCoordinates[:, nuH2OnInd]  # Зарядовое число молей воды в приэлектродной области отрицательного электрода
+    nuH2OStp = stateCoordinates[:, nuH2OStpInd]  # Зарядовое число молей воды в камере положительного электрода
+    nuH2OStn = stateCoordinates[:, nuH2OStnInd]  # Зарядовое число молей воды в камере отрицательного электрода
+    nuO2 = stateCoordinates[:, nuO2Ind]  # Зарядовое число молей кислорода
+    nuH2 = stateCoordinates[:, nuH2Ind]  # Зарядовое число молей водорода
 
     # Температура аккумулятора
-    TFEl = reducedTemp[:, 0] - 273.15
-    TElp = reducedTemp[:, 1] - 273.15
-    TEln = reducedTemp[:, 2] - 273.15
+    TFEl = reducedTemp[:, TFElInd] - 273.15  # Температура топливного элемента
+    TElp = reducedTemp[:, TElpInd] - 273.15  # Температура в камере положительного электрода
+    TEln = reducedTemp[:, TElnInd] - 273.15  # Температура в камере отрицательного электрода
 
     # Получаем параметры
-    Cbin0p = otherSystemParameters[28]  # Емкость положительного двойного слоя
-    Cm = otherSystemParameters[29]  # Емкость мембраны
-    Cbin0n = otherSystemParameters[30]  # Емкость отрицательного двойного слоя
-    alphaCQp = otherSystemParameters[59]  # Зарядовый коэффициент емкости положительного электрода, 1/Кл
-    alphaCQn = otherSystemParameters[60]  # Зарядовый коэффициент емкости отрицательного электрода, 1/Кл
+    [Cbin0p,  # Емкость положительного двойного слоя
+     Cm,  # Емкость мембраны
+     Cbin0n,  # Емкость отрицательного двойного слоя
+     alphaCQp,  # Зарядовый коэффициент емкости положительного электрода
+     alphaCQn,  # Зарядовый коэффициент емкости отрицательного электрода
 
-    betaCQ2p = otherSystemParameters[101]
-    betaCQ2n = otherSystemParameters[102]
-    betaCQ3p = otherSystemParameters[103]
-    betaCQ3n = otherSystemParameters[104]
+     betaCQ2p,
+     betaCQ2n,
+     betaCQ3p,
+     betaCQ3n,
 
-    # Получаем сопротивление клемм
-    Rkl = otherSystemParameters[-1]
+     Rkl  # Сопротивление клемм
+     ] = otherSystemParameters[systemParametersIndexes]
 
     # Определяем емкости двойных слоев
     (Cbinp, Cbinn) = funCbin(qbinp, qbinn, alphaCQp, alphaCQn, Cbin0p, Cbin0n,
@@ -57,10 +96,10 @@ def CharacteristicsFunction(t,  # Моменты времени
     Ubinn = qbinn / Cbinn  # Отрицательный двойной слой
 
     # Напряжение на клеммах
-    Ukl = Ubinp + Um + Ubinn - Icur * Rkl
+    Ukl = Ubinp + Um + Ubinn - I * Rkl
 
     # Выводм результат
-    return (t, Ukl, Ubinp, Ubinn, Um,
+    return (t.reshape(-1,), Ukl, Ubinp, Ubinn, Um,
             TFEl, TElp, TEln,
             nuH2Op, nuH2On, nuH2OStp, nuH2OStn,
             nuO2, nuH2)

@@ -1,6 +1,6 @@
 import numpy as np
 
-from .StationFunction import IndepStateFunction
+from .StationFunction import IndepStateFunction, stateCoordinatesNames, reducedTemperaturesEnergyPowersNames
 
 from MathProtEnergyProc.CorrectionModel import KineticMatrixQ, KineticMatrixFromPosSubMatrix, CreateBlockMatrix
 from MathProtEnergyProc.HeatPowerValues import IntPotentialsOne, HeatValuesOne
@@ -11,10 +11,8 @@ from MathProtEnergyProc.CorrectionModel import ReluFilter, PosLinearFilter
 # Функция структуры аккумулятора
 def StructureFunction():
     # Описываем структуру водородно-воздушного топливного элемента
-    stateCoordinatesNames = ["qbinp", "qm", "qbinn", "nuH2Op", "nuH2On", "nuH2OStp", "nuH2OStn", "nuO2", "nuH2"]  # Имена координат состояния
     processCoordinatesNames = ["dqbinp", "dqm", "dqbinn", "diffH2O", "evH2Op", "evH2On"]  # Имена координат процессов
     energyPowersNames = ["EnPowFEl", "EnPowElp", "EnPowEln", "EnPowOkr"]  # Имена энергетических степеней свободы
-    reducedTemperaturesEnergyPowersNames = ["TFEl", "TElp", "TEln"]  # Имена приведенных температур энергетических степеней свободы
     energyPowersBetNames = []  # Имена взаимодействий между энергетическими степенями свободы
     heatTransfersNames = ["Qexp", "QFElp", "QFEln", "Qexpp", "Qexpn"]  # Имена потоков переноса теплоты
     heatTransfersOutputEnergyPowersNames = ["EnPowFEl", "EnPowFEl", "EnPowFEl", "EnPowElp", "EnPowEln"]  # Имена энергетических степеней свободы, с которых уходит теплота
