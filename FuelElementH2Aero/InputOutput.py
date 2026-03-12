@@ -65,7 +65,6 @@ def InputArrayCreate(Pars,  # Параметры
 
     # Массив параметров
     USystemParametersNames = UParametersSystemParametersNames + otherSystemParametersNames
-    print(USystemParametersNames)
     systemParameters = Pars[USystemParametersNames].to_numpy()
 
     # Массив начальных состояний
