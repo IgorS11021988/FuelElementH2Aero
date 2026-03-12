@@ -61,7 +61,7 @@ def InputArrayCreate(Pars,  # Параметры
     crCfCorr(Pars, "crEvH20KEln")
 
     # Переводим температуру в кельвины
-    Pars[["TFEl0", "TElp0", "TEln0", "Tokr", "THMus", "bRTp", "bRTm", "bRTn", "bTKEvH2Osp", "bTKEvH2Osn"]] += 273.15
+    Pars[["TFEl", "TElp", "TEln", "Tokr", "THMus", "bRTp", "bRTm", "bRTn", "bTKEvH2Osp", "bTKEvH2Osn"]] += 273.15
 
     # Массив параметров
     USystemParametersNames = UParametersSystemParametersNames + otherSystemParametersNames
