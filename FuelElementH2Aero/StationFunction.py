@@ -52,7 +52,6 @@ def IndepStateFunction(stateCoordinates,
      ] = reducedTemp
 
     # Получаем параметры
-    print(systemParameters)
     [I,  # Ток во внешней цепи
      Tokr,  # Температура окружающей среды
      Econ,  # Контактная ЭДС
