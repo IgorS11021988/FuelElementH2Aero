@@ -6,9 +6,6 @@ from MathProtEnergyProcSynDatas.File import DynamicSaveAndSaveGraphics
 
 from MathProtEnergyProc.CorrectionModel import ReluFilter
 
-from .fU import UParametersSystemParametersNames, otherSystemParametersNames
-from .StationFunction import stateCoordinatesNames, reducedTemperaturesEnergyPowersNames
-
 
 # Корректировка перекрестных коэффициентов
 def crCfCorr(Pars,  # Параметры
@@ -63,14 +60,6 @@ def InputArrayCreate(Pars,  # Параметры
     # Переводим температуру в кельвины
     Pars[["TFEl", "TElp", "TEln", "Tokr", "THMus", "bRTp", "bRTm", "bRTn", "bTKEvH2Osp", "bTKEvH2Osn"]] += 273.15
 
-    # Массив параметров
-    USystemParametersNames = UParametersSystemParametersNames + otherSystemParametersNames
-    systemParameters = Pars[USystemParametersNames].to_numpy()
-
-    # Массив начальных состояний
-    stateCoordinates0 = Pars[stateCoordinatesNames].to_numpy()
-    reducedTemp0 = Pars[reducedTemperaturesEnergyPowersNames].to_numpy()
-
     #  Моменты времени
     Tints = integrateAttributes["Tint"].to_numpy()  # Времена интегрирования
     NPoints = np.array(integrateAttributes["NPoints"], dtype=np.int32)  # Числа точек интегрирования
@@ -79,11 +68,7 @@ def InputArrayCreate(Pars,  # Параметры
                             )
 
     # Возвращаем исходные данные динамики системы
-    return (Tints,
-            stateCoordinates0,
-            reducedTemp0,
-            systemParameters,
-            ts)
+    return (Pars, Tints, ts)
 
 
 # Обработка результатов моделирования динамик

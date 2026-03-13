@@ -1,10 +1,7 @@
-import numpy as np
-
 from MathProtEnergyProcBase.IndexFunctions import GetIndex, GetIndexes
 
-from .StationFunction import stateCoordinatesNames, reducedTemperaturesEnergyPowersNames, USystemParametersNames
+from .AttributesNames import stateCoordinatesNames, reducedTemperaturesEnergyPowersNames, USystemParametersNames, otherSystemParametersNames
 from .StationFunctions import funCbin
-from .fU import fU, otherSystemParametersNames
 
 
 # Индексы координат состояния
@@ -46,14 +43,11 @@ systemParametersIndexes = GetIndexes(otherSystemParametersNames, ["Cbin0p",  # �
 def CharacteristicsFunction(t,  # Моменты времени
                             stateCoordinates,  # Координаты состояния
                             reducedTemp,  # Приведенные температуры
-                            systemParameters  # Параметры системы
+                            USystemParameters,  # U-параметры системы
+                            otherSystemParameters  # Прочие параметры системы
                             ):
     # Получаем динамику тока
-    (USystemParameters,
-     otherSystemParameters) = fU(t,  # Моменты времени
-                                 systemParameters  # Параметры системы
-                                 )
-    I = USystemParameters[:, IInd]  # Ток в текущие моменты времени
+    Icur = USystemParameters[:, IInd]  # Ток в текущие моменты времени
 
     # Получаем координаты состояния
     qbinp = stateCoordinates[:, qbinpInd]  # Заряд на положительном двойном слое
@@ -96,7 +90,7 @@ def CharacteristicsFunction(t,  # Моменты времени
     Ubinn = qbinn / Cbinn  # Отрицательный двойной слой
 
     # Напряжение на клеммах
-    Ukl = Ubinp + Um + Ubinn - I * Rkl
+    Ukl = Ubinp + Um + Ubinn - Icur * Rkl
 
     # Выводм результат
     return (t.reshape(-1,), Ukl, Ubinp, Ubinn, Um,

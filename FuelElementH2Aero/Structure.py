@@ -1,6 +1,7 @@
 import numpy as np
 
-from .StationFunction import IndepStateFunction, stateCoordinatesNames, reducedTemperaturesEnergyPowersNames
+from .StationFunction import IndepStateFunction
+from .AttributesNames import stateCoordinatesNames, reducedTemperaturesEnergyPowersNames
 
 from MathProtEnergyProc.CorrectionModel import KineticMatrixQ, KineticMatrixFromPosSubMatrix, CreateBlockMatrix
 from MathProtEnergyProc.HeatPowerValues import IntPotentialsOne, HeatValuesOne
