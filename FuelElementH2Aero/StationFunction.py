@@ -218,7 +218,7 @@ def IndepStateFunction(stateCoordinates,
                                       hH2OStsn, dhH2OStsn, hH2s, dhH2s,
                                       betaMuH2OStn, betaMuH2OStH2n, betaMuH2n,
                                       betaHH2OStn, betaHH2OStH2n, betaHH2n,
-                                      cElH2OStn, cElH2n, CElsp)  # Определяем химические потенциалы кислорода и воды в камере отрицательного электрода
+                                      cElH2OStn, cElH2n, CElsn)  # Определяем химические потенциалы кислорода и воды в камере отрицательного электрода
 
     # Определяем сопротивления двойных слоев (вместе с теплообменом с камерами электродов)
     (sbinp, sbinn) = funRbin(TFEl, dissUbinp, dissUbinn, alphaRIp,
