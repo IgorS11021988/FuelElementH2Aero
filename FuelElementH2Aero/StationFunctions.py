@@ -59,9 +59,16 @@ def funJHSzTEl(qbinp, qm, qbinn,
     dTFEl = TFEl - THMus  # Температура относительно уровня
     lTFEl = dTFEl - TFEl * np.log(rTFEl)
 
+    # Напряжения на двойных слоях
+    Ubinp = qbinp / Cbinp  # Положительный двойной слой
+    Ubinn = qbinn / Cbinn  # Отрицательный двойной слой
+
+    # Напряжение на мембране
+    Um = qm / Cm
+
     # Падения напряжений на двойных слоях
-    dissUbinp =  Econ - qbinp / Cbinp  # Положительный двойной слой
-    dissUbinn = -Econ - qbinn / Cbinn  # Отрицательный двойной слой
+    dissUbinp =  Econ - Ubinp  # Положительный двойной слой
+    dissUbinn = -Econ - Ubinn  # Отрицательный двойной слой
 
     # Теплоемкость топливного элемента
     CFEl = CFEls + cFElH2O * (nuH2Op + nuH2On)
@@ -69,13 +76,13 @@ def funJHSzTEl(qbinp, qm, qbinn,
     # Матрица Якоби приведенной энтропии по координатам состояния
     JSzElH2Op = -hH2Ops - (muH2Op - hH2Ops) * rTFEl - cFElH2O * lTFEl
     JSzElH2On = -hH2Ons - (muH2On - hH2Ons) * rTFEl - cFElH2O * lTFEl
-    JSzEl = np.array([dissUbinp, -qm / Cm, dissUbinn,
+    JSzEl = np.array([dissUbinp, -Um, dissUbinn,
                       JSzElH2Op, JSzElH2On], dtype=np.double) / TFEl
 
     # Матрица Гесса приведенной энтропии по координатам состояния и температуре
     HSzTElH2Op = hH2Ops + cFElH2O * dTFEl
     HSzTElH2On = hH2Ons + cFElH2O * dTFEl
-    HSzTEl = np.array([-dissUbinp, qm / Cm, -dissUbinn,
+    HSzTEl = np.array([-dissUbinp, Um, -dissUbinn,
                        HSzTElH2Op, HSzTElH2On], dtype=np.double) / np.power(TFEl, 2)
 
     # Приведенные первая и вторая производные приведенной энтропии по температуре
@@ -83,7 +90,7 @@ def funJHSzTEl(qbinp, qm, qbinn,
     HSTTEl = CFEl * (2 * THMus - TFEl) / np.power(TFEl, 3)
 
     # Выводим результат
-    return (JSzEl, HSzTEl, JSTEl, HSTTEl, dissUbinp, dissUbinn)
+    return (JSzEl, HSzTEl, JSTEl, HSTTEl, Ubinp, Um, Ubinn, dissUbinp, dissUbinn)
 
 
 def funHMuLog(rNu, HMus, dHMus):

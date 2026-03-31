@@ -78,7 +78,7 @@ def OutputValues(dyns, fileName,
                  ):
     # Получаем величины из кортежа
     (t, Ukl, Ubinp, Ubinn, Um,
-     TFEl, TElp, TEln,
+     TFEl, TElp, TEln, Icur, Ibinp, Im, Ibinn,
      qH2Op, qH2On, qH2OStp, qH2OStn,
      qO2, qH2) = dyns
 
@@ -88,6 +88,10 @@ def OutputValues(dyns, fileName,
                        "Ubinp": Ubinp,
                        "Ubinn": Ubinn,
                        "Um": Um,
+                       "Ibinp": Ibinp,
+                       "Ibinn": Ibinn,
+                       "Im": Im,
+                       "I": Icur,
                        "TFEl": TFEl,
                        "TElp": TElp,
                        "TEln": TEln,
@@ -123,6 +127,16 @@ def OutputValues(dyns, fileName,
                             "graphName": "Напряжения в топливном элементе",  # Имя полотна
                             "yAxesName": "Напряжение, В",  # Имя оси
                             "graphFileBaseName": "InElVoltages"  # Имя файла графика
+                            },
+
+                           {"listValues": [Ibinn, Ibinp, Im, Icur],  # Список величин в моменты времени
+                            "listValuesNames": ["Отрицательный двойной слой",
+                                                "Положительный двойной слой",
+                                                "Мембрана",
+                                                "Ток во внешней цепи"],  # Список имен величин (в моменты времени)
+                            "graphName": "Токи в топливном элементе",  # Имя полотна
+                            "yAxesName": "Ток, А",  # Имя оси
+                            "graphFileBaseName": "ElCur"  # Имя файла графика
                             },
 
                            {"listValues": [qH2On, qH2Op],  # Список величин в моменты времени
