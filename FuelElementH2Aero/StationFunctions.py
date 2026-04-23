@@ -31,28 +31,69 @@ def funHMuLin(rNu, HMus, dHMus,
 
 
 def funJHSzTEl(qbinp, qm, qbinn,
-               nuH2Op, nuH2On, TFEl,
-               Cbinp, Cm, Cbinn, Econ,
-               nuH2Os, THMus, muH2Os,
-               dmuH2Os, hH2Os, dhH2Os,
+               nuH2Op, nuO2dp, nuO2dn,
+               nuH2On, nuH2dp, nuH2dn, TFEl,
+               Cbinp, Cm, Cbinn, Econ, THMus,
+               nuH2Os, nuO2ds, nuH2ds,
+               muH2Os, muO2ds, muH2ds,
+               dmuH2Os, dmuO2ds, dmuH2ds,
+               hH2Os, hO2ds, hH2ds,
+               dhH2Os, dhO2ds, dhH2ds,
                betaMuH2O2, betaMuH2O3,
                betaHH2O2, betaHH2O3,
-               cFElH2O, CFEls):  # Характерный химический потенциал кислорода в мембране
-    # Относительное число молей пропитывающей воды
+               betaMuO22, betaMuO23,
+               betaHO22, betaHO23,
+               betaMuH22, betaMuH23,
+               betaHH22, betaHH23,
+               betaMuO2H2O, betaMuH2H2O,
+               cFElH2O, cFElO2, cFElH2, CFEls):  # Характерный химический потенциал кислорода в мембране
+    # Относительное числа молей
     rNuH2Op = nuH2Op / nuH2Os
     rNuH2On = nuH2On / nuH2Os
+    rNuO2dp = nuO2dp / nuO2ds
+    rNuO2dn = nuO2dn / nuO2ds
+    rNuH2dp = nuH2dp / nuH2ds
+    rNuH2dn = nuH2dn / nuH2ds
+
+    # Относительные перекрестные числа молей
+    crNuH2OO2s = np.sqrt(nuH2Os * nuO2ds)
+    crNuH2OH2s = np.sqrt(nuH2Os * nuH2ds)
+    crNuH2OO2p = nuH2Op / crNuH2OO2s
+    crNuH2OO2n = nuH2On / crNuH2OO2s
+    crNuH2OH2p = nuH2Op / crNuH2OH2s
+    crNuH2OH2n = nuH2On / crNuH2OH2s
+    crNuO2dp = nuO2dp / crNuH2OO2s
+    crNuO2dn = nuO2dn / crNuH2OO2s
+    crNuH2dp = nuH2dp / crNuH2OH2s
+    crNuH2dn = nuH2dn / crNuH2OH2s
 
     # Химический потенциал пропитывающей воды при стандартной температуре
     muH2Op = funHMuLin(rNuH2Op, muH2Os, dmuH2Os,
-                       betaMuH2O2, betaMuH2O3)
+                       betaMuH2O2, betaMuH2O3) + betaMuO2H2O * crNuO2dp + betaMuH2H2O * crNuH2dp
     muH2On = funHMuLin(rNuH2On, muH2Os, dmuH2Os,
-                       betaMuH2O2, betaMuH2O3)
+                       betaMuH2O2, betaMuH2O3) + betaMuO2H2O * crNuO2dn + betaMuH2H2O * crNuH2dn
+    muO2p = funHMuLin(rNuO2dp, muO2ds, dmuO2ds,
+                      betaMuO22, betaMuO23) + betaMuO2H2O * crNuH2OO2p
+    muO2n = funHMuLin(rNuO2dn, muO2ds, dmuO2ds,
+                      betaMuO22, betaMuO23) + betaMuO2H2O * crNuH2OO2n
+    muH2p = funHMuLin(rNuH2dp, muH2ds, dmuH2ds,
+                      betaMuH22, betaMuH23) + betaMuH2H2O * crNuH2OH2p
+    muH2n = funHMuLin(rNuH2dn, muH2ds, dmuH2ds,
+                      betaMuH22, betaMuH23) + betaMuH2H2O * crNuH2OH2n
 
     # Тепловой потенциал пропитывающей воды при стандартной температуре
     hH2Ops = funHMuLin(rNuH2Op, hH2Os, dhH2Os,
                        betaHH2O2, betaHH2O3)
     hH2Ons = funHMuLin(rNuH2On, hH2Os, dhH2Os,
                        betaHH2O2, betaHH2O3)
+    hO2ps = funHMuLin(rNuO2dp, hO2ds, dhO2ds,
+                      betaHO22, betaHO23)
+    hO2ns = funHMuLin(rNuO2dn, hO2ds, dhO2ds,
+                      betaHO22, betaHO23)
+    hH2ps = funHMuLin(rNuH2dp, hH2ds, dhH2ds,
+                      betaHH22, betaHH23)
+    hH2ns = funHMuLin(rNuH2dn, hH2ds, dhH2ds,
+                      betaHH22, betaHH23)
 
     # Приведенные температуры
     rTFEl = TFEl / THMus  # Относительная температура
@@ -71,26 +112,44 @@ def funJHSzTEl(qbinp, qm, qbinn,
     dissUbinn = -Econ - Ubinn  # Отрицательный двойной слой
 
     # Теплоемкость топливного элемента
-    CFEl = CFEls + cFElH2O * (nuH2Op + nuH2On)
+    CFEl = CFEls + cFElH2O * (nuH2Op + nuH2On) + cFElO2 * (nuO2dp + nuO2dn) + cFElH2 * (nuH2dp + nuH2dn)
 
     # Матрица Якоби приведенной энтропии по координатам состояния
     JSzElH2Op = -hH2Ops - (muH2Op - hH2Ops) * rTFEl - cFElH2O * lTFEl
     JSzElH2On = -hH2Ons - (muH2On - hH2Ons) * rTFEl - cFElH2O * lTFEl
+    JSzElO2p = -hO2ps - (muO2p - hO2ps) * rTFEl - cFElO2 * lTFEl
+    JSzElO2n = -hO2ns - (muO2n - hO2ns) * rTFEl - cFElO2 * lTFEl
+    JSzElH2p = -hH2ps - (muH2p - hH2ps) * rTFEl - cFElH2 * lTFEl
+    JSzElH2n = -hH2ns - (muH2n - hH2ns) * rTFEl - cFElH2 * lTFEl
     JSzEl = np.array([dissUbinp, -Um, dissUbinn,
-                      JSzElH2Op, JSzElH2On], dtype=np.double) / TFEl
+                      JSzElH2Op, JSzElH2On,
+                      JSzElO2p, JSzElO2n,
+                      JSzElH2p, JSzElH2n], dtype=np.double) / TFEl
 
     # Матрица Гесса приведенной энтропии по координатам состояния и температуре
     HSzTElH2Op = hH2Ops + cFElH2O * dTFEl
     HSzTElH2On = hH2Ons + cFElH2O * dTFEl
+    HSzTElO2p = hO2ps + cFElO2 * dTFEl
+    HSzTElO2n = hO2ns + cFElO2 * dTFEl
+    HSzTElH2p = hH2ps + cFElH2 * dTFEl
+    HSzTElH2n = hH2ns + cFElH2 * dTFEl
     HSzTEl = np.array([-dissUbinp, Um, -dissUbinn,
-                       HSzTElH2Op, HSzTElH2On], dtype=np.double) / np.power(TFEl, 2)
+                       HSzTElH2Op, HSzTElH2On,
+                       HSzTElO2p, HSzTElO2n,
+                       HSzTElH2p, HSzTElH2n], dtype=np.double) / np.power(TFEl, 2)
 
     # Приведенные первая и вторая производные приведенной энтропии по температуре
     JSTEl = CFEl * dTFEl / np.power(TFEl, 2)
     HSTTEl = CFEl * (2 * THMus - TFEl) / np.power(TFEl, 3)
 
     # Выводим результат
-    return (JSzEl, HSzTEl, JSTEl, HSTTEl, Ubinp, Um, Ubinn, dissUbinp, dissUbinn)
+    return (JSzEl, HSzTEl, JSTEl, HSTTEl,
+            Ubinp, Um, Ubinn, dissUbinp, dissUbinn,
+            rNuO2dp, rNuO2dn,
+            rNuH2dp, rNuH2dn,
+            JSzElH2Op, JSzElH2On,
+            JSzElO2p, JSzElO2n,
+            JSzElH2p, JSzElH2n)
 
 
 def funHMuLog(rNu, HMus, dHMus):
@@ -142,7 +201,7 @@ def funJHSzTCam(nuH2OSt, nuG, TCam,
     HSTTCam = CCam * (2 * THMus - TCam) / np.power(TCam, 3)
 
     # Выводим результат
-    return (JSzCam, HSzTCam, JSTCam, HSTTCam)
+    return (JSzCam, HSzTCam, JSTCam, HSTTCam, rNuG)
 
 
 def funKrmH2O(nuH2Op, nuH2On, nuH2Osm):
@@ -246,3 +305,24 @@ def funEvH2O(TFEl, TElp, TEln, nuH2Op, nuH2On, nuH2OStp,
     # Выводим результат
     return (kTEvH2Op * kNuEvH2Op,
             kTEvH2On * kNuEvH2On)
+
+
+# Функция для расчета относительного коэффициента растворения
+def funKDiss(rNuG, rNuGd,
+             rKDissG, rKDissGd,
+             betaG2, betaGd2, betaGcd2):
+    # Рассчитываем коэффициент растворения и выводим результат
+    return rKDissG * (rNuG + betaG2 * np.power(rNuG, 2)) + rKDissGd * (rNuGd + betaGd2 * np.power(rNuGd, 2)) + rKDissG * rKDissGd * betaGcd2 * rNuG * rNuGd
+
+
+# Функция коэффициента утилизации топлива
+def funUtKH2O2(rNuO2, rNuH2,
+               muH2O, muH2, muO2,
+               betakUtH2O2,
+               betakUtH2O2O2,
+               betakUtH2O2H2):
+    # Вычисляем приведенное химическое сродство
+    aUtFuel = ReluFilter(2 * muH2 + muO2 - 2 * muH2O) * rNuO2 * rNuH2 * (betakUtH2O2 + betakUtH2O2O2 * rNuO2 + betakUtH2O2H2 * rNuH2)
+
+    # Выводим результат
+    return aUtFuel

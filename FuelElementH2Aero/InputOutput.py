@@ -31,7 +31,7 @@ def InputArrayCreate(Pars,  # Параметры
                      integrateAttributes  # Аттрибуты интегрирования
                      ):  # Формирование массивов входных параметров
     # Корректируем начальное состояние
-    Pars[["nuH2OStp", "nuH2OStn", "nuO2", "nuH2"]] *= Pars[["nuH2OStsEp", "nuH2OStsEn", "nuO2Es", "nuH2Es"]].to_numpy()  # Корректируем начальное числа молей воды
+    Pars[["nuH2OStp", "nuH2OStn", "nuO2", "nuH2", "nuO2dp", "nuO2dn", "nuH2dp", "nuH2dn"]] *= Pars[["nuH2OStsEp", "nuH2OStsEn", "nuO2Es", "nuH2Es", "nuO2ds", "nuO2ds", "nuH2ds", "nuH2ds"]].to_numpy()  # Корректируем начальное числа молей воды
     Pars[["TFEl", "TElp", "TEln"]] += Pars[["Tokr"]].to_numpy()  # Корректируем начальные температуры, заданные относительно температуры окружающей среды
     Pars["qbinp"] *= (Pars["muO2s"] / 4 - Pars["muH2Os"] / 2 + Pars["Econ"]) * Pars["Cbin0p"]  # Заряд на положительном двойном слое, Кл
     Pars["qbinn"] *= (Pars["muH2s"] / 2 - Pars["Econ"]) * Pars["Cbin0n"]  # Заряд на отрицательном двойном слое, Кл
@@ -80,7 +80,8 @@ def OutputValues(dyns, fileName,
     (t, Ukl, Ubinp, Ubinn, Um,
      TFEl, TElp, TEln, Icur, Ibinp, Im, Ibinn,
      qH2Op, qH2On, qH2OStp, qH2OStn,
-     qO2, qH2) = dyns
+     qO2, qH2, qO2dp, qO2dn, qH2dp, qH2dn,
+     vUtFuelp, vUtFueln) = dyns
 
     # Заголовки и динамики
     dynamicsHeaders = {"Time": t,
@@ -100,7 +101,13 @@ def OutputValues(dyns, fileName,
                        "qH2OStp": qH2OStp,
                        "qH2OStn": qH2OStn,
                        "qO2": qO2,
-                       "qH2": qH2
+                       "qH2": qH2,
+                       "qO2dp": qO2dp,
+                       "qH2dp": qH2dp,
+                       "qO2dn": qO2dn,
+                       "qH2dn": qH2dn,
+                       "vUtFuelp": vUtFuelp,
+                       "vUtFueln": vUtFueln
                        }
 
     # Одиночные графики на полотне
@@ -161,6 +168,30 @@ def OutputValues(dyns, fileName,
                             "graphName": "Количество газов в электродных камерах",  # Имя полотна
                             "yAxesName": "Зарядовое число молей газа, Кл",  # Имя оси
                             "graphFileBaseName": "ElGases"  # Имя файла графика
+                            },
+
+                           {"listValues": [qO2dp, qO2dn],  # Список величин в моменты времени
+                            "listValuesNames": ["Положительный электрод",
+                                                "Отрицательный электрод"],  # Список имен величин (в моменты времени)
+                            "graphName": "Количество растворенного кислорода в приэлектродных областях",  # Имя полотна
+                            "yAxesName": "Зарядовое число молей кислорода, Кл",  # Имя оси
+                            "graphFileBaseName": "ElO2d"  # Имя файла графика
+                            },
+
+                           {"listValues": [qH2dp, qH2dn],  # Список величин в моменты времени
+                            "listValuesNames": ["Положительный электрод",
+                                                "Отрицательный электрод"],  # Список имен величин (в моменты времени)
+                            "graphName": "Количество растворенного водорода в приэлектродных областях",  # Имя полотна
+                            "yAxesName": "Зарядовое число молей водорода, Кл",  # Имя оси
+                            "graphFileBaseName": "ElH2d"  # Имя файла графика
+                            },
+
+                           {"listValues": [vUtFuelp, vUtFueln],  # Список величин в моменты времени
+                            "listValuesNames": ["Положительный электрод",
+                                                "Отрицательный электрод"],  # Список имен величин (в моменты времени)
+                            "graphName": "Скорость утилизации топлива в приэлектродных областях",  # Имя полотна
+                            "yAxesName": "Зарядовая cкорость утилизации топлива, А",  # Имя оси
+                            "graphFileBaseName": "vUtFuel"  # Имя файла графика
                             }]
 
     # Сохраняем динамику в .csv файл и отображаем графики
