@@ -72,8 +72,8 @@ def InputArrayCreate(Pars,  # Параметры
 
 
 # Обработка результатов моделирования динамик
-def OutputValues(dyns, fileName,
-                 sep, dec, index,
+def OutputValues(dyns, index,
+                 saveDynamicFun,
                  plotGraphics=False  # Необходимость построения графиков
                  ):
     # Получаем величины из кортежа
@@ -196,15 +196,14 @@ def OutputValues(dyns, fileName,
 
     # Сохраняем динамику в .csv файл и отображаем графики
     DynamicSaveAndSaveGraphics(dynamicsHeaders,  # Словарь динамик с заголовками
-                               fileName,  # Имя файла динамик
+                               saveDynamicFun,  # Имя функции сохранения динамики
 
                                t,  # Моменты времени
                                oneTimeValueGraphics,  # Один график на одном полотне
                                timesValuesGraphics,  # Несколько графиков на одном полотне
 
                                plotGraphics,  # Необходимость построения графиков
-
-                               sep, dec,   # Разделители (csv и десятичный соответственно)
+                               showGraphics=True,  # Необходимость отображения графиков
 
                                saveDynamicIndicator=SaveDynamicToFileIndicate,  # Индикатор сохранения динамики
                                saveGraphicIndicator=PlotGraphicIndicate,  # Индикатор отображения графиков

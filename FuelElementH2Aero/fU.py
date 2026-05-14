@@ -5,8 +5,13 @@ import numpy as np
 def fU(t,  # Моменты времени
        UParametersSystemParameters  # U-параметры системы
        ):
-    # Получаем параметры токов
-    [Ie] = UParametersSystemParameters
+    # Выделяем параметры динамики
+    [OmegaVAlpha,  # Частота колебаний внешнего потока
+     AvAlpha  # Амплитуда колебаний внешнего потока
+     ] = UParametersSystemParameters  # Постоянная составляющая тока
 
-    # Получаем массив токов
-    return np.full_like(t, Ie, dtype=np.double)
+    # Рассчитываем поток вещества
+    vAlpha = np.abs(AvAlpha * OmegaVAlpha * np.sin(OmegaVAlpha * t))  # Учитываем колебания
+
+    # Выводим результат
+    return vAlpha
