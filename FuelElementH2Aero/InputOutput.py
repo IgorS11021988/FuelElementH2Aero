@@ -73,9 +73,7 @@ def InputArrayCreate(Pars,  # Параметры
 
 # Обработка результатов моделирования динамик
 def OutputValues(dyns, index,
-                 saveDynamicFun,
-                 plotGraphics=False  # Необходимость построения графиков
-                 ):
+                 saveDynamicFun):
     # Получаем величины из кортежа
     (t, Ukl, Ubinp, Ubinn, Um,
      TFEl, TElp, TEln, Icur, Ibinp, Im, Ibinn,
@@ -212,10 +210,10 @@ def OutputValues(dyns, index,
                                oneTimeValueGraphics,  # Один график на одном полотне
                                timesValuesGraphics,  # Несколько графиков на одном полотне
 
-                               plotGraphics,  # Необходимость построения графиков
                                showGraphics=True,  # Необходимость отображения графиков
 
                                saveDynamicIndicator=SaveDynamicToFileIndicate,  # Индикатор сохранения динамики
                                saveGraphicIndicator=PlotGraphicIndicate,  # Индикатор отображения графиков
+
                                index=index  # Индекс динамики
                                )
