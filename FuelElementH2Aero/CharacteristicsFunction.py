@@ -96,3 +96,59 @@ def CharacteristicsFunction(t,  # Моменты времени
             nuH2Op, nuH2On, nuH2OStp, nuH2OStn,
             nuO2, nuH2, nuO2dp, nuO2dn, nuH2dp, nuH2dn,
             vUtFuelp, vUtFueln)
+
+
+# Функция состояния для литий-ионного аккумулятора
+def CharacteristicsFunctionOptimize(t,  # Моменты времени
+                                    stateCoordinates,  # Координаты состояния
+                                    reducedTemp,  # Приведенные температуры
+                                    USystemParameters,  # U-параметры системы
+                                    otherSystemParameters,  # Прочие параметры системы
+                                    nEqSysQ  # Указатель на функцию системы
+                                    ):
+    # Рассчитываем аттрибуты системы
+    def GetElAttr(ind):
+        # Рассчитываем аттрибуты
+        nEqSysQ.CountSystem(stateCoordinates[ind],  # Координаты состояния
+                            reducedTemp[ind],  # Приведенные температуры энергетических степеней свободы
+                            np.hstack([USystemParameters[ind], otherSystemParameters])  # Параметры системы
+                            )
+
+        # Получаем напряжения двойных слоев
+        Ubinp = nEqSysQ.GetStateFunction().GetIndepStateFunction().GetUbinp()  # Положительный двойной слой
+        Ubinn = nEqSysQ.GetStateFunction().GetIndepStateFunction().GetUbinn()  # Отрицательный двойной слой
+
+        # Получаем напряжение мембраны
+        Um = nEqSysQ.GetStateFunction().GetIndepStateFunction().GetUm()
+
+        # Выводим результат
+        return (Ubinp, Um, Ubinn)
+    inds = np.arange(t.shape[0])  # Массив индексов
+    GetAttrs = np.vectorize(GetElAttr)
+    (Ubinp, Um, Ubinn) = GetAttrs(inds)
+
+    # Получаем динамику тока
+    Icur = USystemParameters[:, IInd]  # Ток в текущие моменты времени
+
+    # Получаем координаты состояния
+    nuH2OStp = stateCoordinates[:, nuH2OStpInd]  # Зарядовое число молей воды в камере положительного электрода
+    nuH2OStn = stateCoordinates[:, nuH2OStnInd]  # Зарядовое число молей воды в камере отрицательного электрода
+    nuO2 = stateCoordinates[:, nuO2Ind]  # Зарядовое число молей кислорода
+    nuH2 = stateCoordinates[:, nuH2Ind]  # Зарядовое число молей водорода
+
+    # Температура аккумулятора
+    TFEl = reducedTemp[:, TFElInd] - 273.15  # Температура топливного элемента
+    TElp = reducedTemp[:, TElpInd] - 273.15  # Температура в камере положительного электрода
+    TEln = reducedTemp[:, TElnInd] - 273.15  # Температура в камере отрицательного электрода
+
+    # Получаем сопротивление на клеммах
+    Rkl = otherSystemParameters[RklInd]
+
+    # Напряжение на клеммах
+    Ukl = Ubinp + Um + Ubinn - Icur * Rkl
+
+    # Выводм результат
+    return (t.reshape(-1,), Ukl,
+            TFEl, TElp, TEln, Icur,
+            nuH2OStp, nuH2OStn,
+            nuO2, nuH2)

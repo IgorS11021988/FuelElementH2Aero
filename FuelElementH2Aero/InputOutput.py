@@ -217,3 +217,26 @@ def OutputValues(dyns, index,
 
                                index=index  # Индекс динамики
                                )
+
+
+# Обработка результатов оптимизационного моделирования динамик
+def OutputValuesOptimize(dyns, index,
+                         saveDynamicFun):
+    # Получаем величины из кортежа
+    (t, Ukl, TFEl, TElp, TEln, Icur,
+     qH2OStp, qH2OStn, qO2, qH2) = dyns
+
+    # Заголовки и динамики
+    dynamicsHeaders = {"Time": t,
+                       "Ukl": Ukl,
+                       "TFEl": TFEl,
+                       "TElp": TElp,
+                       "TEln": TEln,
+                       "qH2OStp": qH2OStp,
+                       "qH2OStn": qH2OStn,
+                       "qO2": qO2,
+                       "qH2": qH2
+                       }
+
+    # Сохраняем динамику
+    saveDynamicFun.SaveDynamic(dynamicsHeaders, index)
