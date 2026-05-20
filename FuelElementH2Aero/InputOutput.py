@@ -239,4 +239,5 @@ def OutputValuesOptimize(dyns, index,
                        }
 
     # Сохраняем динамику
+    print("Dynamic: " + str(index))
     saveDynamicFun.SaveDynamic(dynamicsHeaders, index)
